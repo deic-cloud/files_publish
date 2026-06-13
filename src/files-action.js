@@ -32,14 +32,12 @@ async function startPublish(nodes) {
 	const data = await ocsGet('/targets')
 	const targets = data?.ocs?.data || []
 	if (!targets.length) {
-		window.OC.dialogs.info(
-			t('files_publish', 'No publishing targets are configured. Ask an administrator to set up Zenodo or Figshare.'),
-			t('files_publish', 'Data publishing'))
+		window.OC.Notification.showTemporary(t('files_publish', 'No publishing targets are configured. Ask an administrator to set up Zenodo or Figshare.'))
 		return
 	}
 	const fileids = nodes.map((n) => n.fileid).filter(Boolean)
 	if (!window.FilesPublishDialog) {
-		window.OC.dialogs.info(t('files_publish', 'The publish dialog failed to load.'), t('files_publish', 'Data publishing'))
+		window.OC.Notification.showTemporary(t('files_publish', 'The publish dialog failed to load.'))
 		return
 	}
 	window.FilesPublishDialog.open(targets, fileids, { ocsGet, ocsPost })
