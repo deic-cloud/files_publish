@@ -76,8 +76,13 @@ Base `/ocs/v2.php/apps/files_publish/api/v1` (`OCS-APIREQUEST: true`).
   tags for richer re-publish/versioning later.
 - **user_orcid** (optional) — author ORCID prefill, guarded with
   `class_exists(\OCA\UserOrcid\Lib::class)`.
-- No build step; the Files integration is vanilla JS via
-  `OCA.Files.registerFileAction`, injected with `LoadAdditionalScriptsEvent`.
+- The **file action** is a small webpack bundle (`src/files-action.js` →
+  `js/files-action.js`) importing `registerFileAction` from
+  `@nextcloud/files` — that API is not exposed to plain JS. The build reuses
+  `../user_group_admin/node_modules` (no separate install); run
+  `node ../user_group_admin/node_modules/webpack/bin/webpack.js --node-env production`.
+  The metadata **dialog** stays vanilla (no npm deps). Both are injected into
+  the Files app via `LoadAdditionalScriptsEvent`.
 
 ## Not yet done
 
