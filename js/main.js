@@ -59,25 +59,40 @@
 		window.FilesPublishDialog.open(targets, fileids, { ocsGet, ocsPost });
 	}
 
+	// @nextcloud/files keeps its file-action registry on a versioned global
+	// scope (window._nc_files_scope.<vN_M>.fileActions). registerFileAction is
+	// not exposed to non-bundled apps, but the Files app only duck-calls the
+	// action's methods (enabled?./displayName/exec…) with no instanceof gate,
+	// so we register by inserting a matching plain object into that Map. We
+	// reuse whichever scope object the package created (version-agnostic).
+	function filesScope() {
+		const root = window._nc_files_scope;
+		if (!root) return null;
+		const scope = root.v4_0 || Object.values(root)[0];
+		if (!scope) return null;
+		scope.fileActions = scope.fileActions || new Map();
+		return scope;
+	}
+
 	function register() {
-		if (!window.OCA || !OCA.Files || !OCA.Files.registerFileAction || !window.OCA.Files.FileAction) {
-			return false;
-		}
-		const { registerFileAction, FileAction } = OCA.Files;
-		registerFileAction(new FileAction({
+		const scope = filesScope();
+		if (!scope) return false;
+		if (scope.fileActions.has('files-publish')) return true;
+		scope.fileActions.set('files-publish', {
 			id: 'files-publish',
 			displayName: () => t('files_publish', 'Publish…'),
+			title: () => t('files_publish', 'Publish to a research data repository'),
 			iconSvgInline: () => window.FilesPublishIcon || '',
-			// Files only (folders are zipped server-side, but allow them too)
-			enabled: (nodes) => nodes.length > 0,
+			// Both files and folders (a folder is zipped server-side before upload)
+			enabled: (nodes) => Array.isArray(nodes) && nodes.length > 0,
 			exec: async (node) => { await startPublish(node); return null; },
 			execBatch: async (nodes) => { await startPublish(nodes); return nodes.map(() => null); },
 			order: 25,
-		}));
+		});
 		return true;
 	}
 
-	// The Files app may load after us; retry briefly.
+	// The Files bundle may initialise its scope after us; retry briefly.
 	if (!register()) {
 		let tries = 0;
 		const iv = setInterval(() => { if (register() || ++tries > 50) clearInterval(iv); }, 100);
