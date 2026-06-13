@@ -1,0 +1,24 @@
+/* Publish dialog (vanilla modal, themed with NC variables) */
+.fp-overlay {
+	position: fixed; inset: 0; z-index: 10000;
+	background: rgba(0,0,0,.4);
+	display: flex; align-items: center; justify-content: center;
+}
+.fp-dialog {
+	background: var(--color-main-background); color: var(--color-main-text);
+	border-radius: var(--border-radius-large, 8px);
+	width: 560px; max-width: 92vw; max-height: 88vh; overflow: auto;
+	padding: 20px 24px; box-shadow: 0 4px 24px rgba(0,0,0,.3);
+}
+.fp-dialog-head { display: flex; justify-content: space-between; align-items: center; }
+.fp-dialog-head h2 { margin: 0; font-size: 1.3em; }
+.fp-x { background: none; border: none; font-size: 24px; cursor: pointer; line-height: 1; }
+.fp-targets { display: flex; gap: 12px; margin: 12px 0 16px; flex-wrap: wrap; }
+.fp-target-opt { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+.fp-target-opt img { height: 20px; vertical-align: middle; }
+.fp-field { margin-bottom: 12px; display: flex; flex-direction: column; }
+.fp-field label { font-weight: 600; margin-bottom: 4px; }
+.fp-field input, .fp-field textarea, .fp-field select { width: 100%; box-sizing: border-box; }
+.fp-hint { color: var(--color-text-maxcontrast); font-size: .9em; margin-top: 2px; }
+.fp-dialog-foot { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-top: 12px; }
+.fp-dialog-foot .fp-msg { color: var(--color-text-maxcontrast); margin-right: auto; }
