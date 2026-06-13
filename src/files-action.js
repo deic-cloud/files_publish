@@ -4,7 +4,7 @@
  * The metadata dialog itself stays vanilla (window.FilesPublishDialog, loaded
  * separately) so the bundle only carries what needs the package.
  */
-import { registerFileAction, FileAction } from '@nextcloud/files'
+import { registerFileAction } from '@nextcloud/files'
 import { translate as t } from '@nextcloud/l10n'
 
 const OCS = (window.OC?.webroot || '') + '/ocs/v2.php/apps/files_publish/api/v1'
@@ -45,7 +45,7 @@ async function startPublish(nodes) {
 	window.FilesPublishDialog.open(targets, fileids, { ocsGet, ocsPost })
 }
 
-registerFileAction(new FileAction({
+registerFileAction({
 	id: 'files-publish',
 	displayName: () => t('files_publish', 'Publish…'),
 	title: () => t('files_publish', 'Publish to a research data repository'),
@@ -54,4 +54,4 @@ registerFileAction(new FileAction({
 	exec: async ({ nodes }) => { await startPublish([nodes]); return null },
 	execBatch: async ({ nodes }) => { await startPublish(nodes); return nodes.map(() => null) },
 	order: 25,
-}))
+})
