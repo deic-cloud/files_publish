@@ -22,3 +22,9 @@
 .fp-hint { color: var(--color-text-maxcontrast); font-size: .9em; margin-top: 2px; }
 .fp-dialog-foot { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-top: 12px; }
 .fp-dialog-foot .fp-msg { color: var(--color-text-maxcontrast); margin-right: auto; }
+
+/* Core resets input{cursor:pointer} / label{cursor:pointer}; restore sensible
+   cursors for the publish form so text fields don't look clickable. */
+.fp-field label { cursor: default; }
+.fp-field input[type="text"], .fp-field textarea { cursor: text; }
+.fp-field select { cursor: pointer; }

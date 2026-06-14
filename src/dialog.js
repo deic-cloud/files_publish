@@ -79,11 +79,14 @@ export function openDialog(targets, fileids, api) {
 	box.querySelector('.fp-x').addEventListener('click', close)
 
 	const picker = el('div', { class: 'fp-targets' })
+	const multi = targets.length > 1
 	targets.forEach((tg, i) => {
 		const b = el('label', { class: 'fp-target-opt' })
-		const r = el('input', { type: 'radio', name: 'fp-target', value: tg.id })
-		if (i === 0) r.checked = true
-		b.appendChild(r)
+		if (multi) {
+			const r = el('input', { type: 'radio', name: 'fp-target', value: tg.id })
+			if (i === 0) r.checked = true
+			b.appendChild(r)
+		}
 		if (tg.icon) b.appendChild(el('img', { src: tg.icon, alt: '' }))
 		b.appendChild(el('span', { text: tg.label }))
 		picker.appendChild(b)
@@ -121,7 +124,8 @@ export function openDialog(targets, fileids, api) {
 	loadSchema(targets[0].id)
 
 	footer.querySelector('.fp-go').addEventListener('click', async () => {
-		const targetId = box.querySelector('input[name="fp-target"]:checked').value
+		const checked = box.querySelector('input[name="fp-target"]:checked')
+		const targetId = checked ? checked.value : targets[0].id
 		const metadata = {}
 		let missing = false
 		current.schema.forEach((f) => {
