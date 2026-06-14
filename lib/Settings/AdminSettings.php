@@ -49,7 +49,7 @@ class AdminSettings implements ISettings {
 	}
 
 	public function getSection(): string {
-		return 'additional';
+		return 'files-publish';
 	}
 
 	public function getPriority(): int {

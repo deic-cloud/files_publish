@@ -19,5 +19,6 @@
 	</dependencies>
 	<settings>
 		<admin>OCA\FilesPublish\Settings\AdminSettings</admin>
+		<admin-section>OCA\FilesPublish\Settings\AdminSection</admin-section>
 	</settings>
 </info>

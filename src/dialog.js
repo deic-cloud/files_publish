@@ -94,7 +94,7 @@ export function openDialog(targets, fileids, api) {
 	box.appendChild(formArea)
 	const footer = el('div', { class: 'fp-dialog-foot' }, [
 		el('span', { class: 'fp-msg' }),
-		el('button', { class: 'primary fp-go', text: t('files_publish', 'Publish') }),
+		el('button', { class: 'primary fp-go', title: t('files_publish', 'Uploads your files as a draft on the selected repository. Nothing is made public and no DOI is minted — you review the metadata and submit it there to finish.'), text: t('files_publish', 'Deposit') }),
 	])
 	box.appendChild(footer)
 
