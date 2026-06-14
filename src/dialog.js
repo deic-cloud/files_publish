@@ -94,9 +94,11 @@ export function openDialog(targets, fileids, api) {
 	box.appendChild(formArea)
 	const footer = el('div', { class: 'fp-dialog-foot' }, [
 		el('span', { class: 'fp-msg' }),
-		el('button', { class: 'primary fp-go', title: t('files_publish', 'Uploads your files as a draft on the selected repository. Nothing is made public and no DOI is minted — you review the metadata and submit it there to finish.'), text: t('files_publish', 'Deposit') }),
+		el('button', { class: 'fp-cancel', text: t('files_publish', 'Cancel') }),
+		el('button', { class: 'primary fp-go', title: t('files_publish', 'Uploads your files as a draft on the selected repository. Nothing is made public and no DOI is minted — you review the metadata and submit it there to finish.'), text: t('files_publish', 'Submit') }),
 	])
 	box.appendChild(footer)
+	footer.querySelector('.fp-cancel').addEventListener('click', close)
 
 	let current = null
 	const msg = footer.querySelector('.fp-msg')
