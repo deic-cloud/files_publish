@@ -26,7 +26,9 @@ class ConfigService {
 	}
 
 	public function set(string $target, string $key, string $value): void {
-		$this->config->setAppValue('files_publish', $this->ckey($target, $key), $value);
+		// Trim pasted whitespace — stray spaces in a client id/secret/URL are
+		// always a mistake and silently break OAuth (encoded as '+').
+		$this->config->setAppValue('files_publish', $this->ckey($target, $key), trim($value));
 	}
 
 	/** @param array<string,string> $values  key => value ('' on a secret leaves it unchanged) */
