@@ -107,16 +107,22 @@ export function openDialog(targets, fileids, api) {
 	const msg = footer.querySelector('.fp-msg')
 
 	async function loadSchema(targetId) {
-		formArea.innerHTML = ''
+		// Preserve anything already entered (fields shared across targets use
+		// the same key) so switching target doesn't wipe the form.
+		const saved = {}
+		formArea.querySelectorAll('[data-key]').forEach((inp) => { saved[inp.dataset.key] = inp.value })
 		msg.textContent = t('files_publish', 'Loading…')
 		const data = await api.ocsGet('/targets/' + encodeURIComponent(targetId) + '/schema')
 		msg.textContent = ''
+		formArea.innerHTML = ''
 		if (data?.ocs?.meta?.status !== 'ok') {
 			formArea.appendChild(el('p', { text: t('files_publish', 'Could not load the form.') })); return
 		}
 		current = data.ocs.data
 		current.schema.forEach((f) => {
-			const val = f.type === 'authors' ? authorsToString(current.creators) : ''
+			const val = (f.key in saved)
+				? saved[f.key]
+				: (f.type === 'authors' ? authorsToString(current.creators) : '')
 			formArea.appendChild(field(f, val))
 		})
 	}
