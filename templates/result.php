@@ -20,6 +20,6 @@ $ok = ($_['status'] ?? '') === 'ok';
 		<p><?php p($_['detail'] ?? ''); ?></p>
 	<?php endif; ?>
 </div>
-<script nonce="<?php p(\OC::$server->get(\OCP\Security\CSP\IContentSecurityPolicyNonceManager::class)->getNonce()); ?>">
+<script nonce="<?php p($_['cspNonce'] ?? ''); ?>">
 	if (window.opener) { try { window.opener.postMessage({ filesPublish: '<?php p($ok ? 'ok' : 'error'); ?>' }, '*'); } catch (e) {} }
 </script>
