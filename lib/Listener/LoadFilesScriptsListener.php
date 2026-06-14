@@ -16,9 +16,8 @@ class LoadFilesScriptsListener implements IEventListener {
 			return;
 		}
 		Util::addStyle('files_publish', 'files');
-		// dialog is vanilla (no npm deps); the action is bundled (@nextcloud/files)
-		// and must load after the Files app registers its scope.
-		Util::addScript('files_publish', 'dialog');
+		// Single bundle (@nextcloud/files action + dialog + toasts); loads after
+		// the Files app so its registry scope exists.
 		Util::addScript('files_publish', 'files-action', 'files');
 	}
 }

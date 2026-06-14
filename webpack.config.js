@@ -16,15 +16,18 @@ module.exports = (env, argv) => {
 			filename: '[name].js',
 			clean:    false,
 		},
-		resolve:       { extensions: ['.js', '.mjs'], modules: [DEPS, 'node_modules'] },
+		resolve:       { extensions: ['.js', '.mjs'], modules: [DEPS, 'node_modules'], fallback: { stream: false } },
 		resolveLoader: { modules: [DEPS, 'node_modules'] },
 		optimization:  { splitChunks: false },
 		module: {
-			rules: [{
-				test: /\.m?js$/,
-				exclude: /node_modules/,
-				use: { loader: 'babel-loader', options: { presets: [require.resolve('@babel/preset-env', { paths: [DEPS] })] } },
-			}],
+			rules: [
+				{
+					test: /\.m?js$/,
+					exclude: /node_modules/,
+					use: { loader: 'babel-loader', options: { presets: [require.resolve('@babel/preset-env', { paths: [DEPS] })] } },
+				},
+				{ test: /\.css$/, use: ['style-loader', 'css-loader'] },
+			],
 		},
 		externals: { OC: 'OC', OCA: 'OCA', OCP: 'OCP' },
 	}

@@ -6,6 +6,8 @@
  */
 import { registerFileAction } from '@nextcloud/files'
 import { translate as t } from '@nextcloud/l10n'
+import { showError, showInfo } from './toast'
+import { openDialog } from './dialog'
 
 const OCS = (window.OC?.webroot || '') + '/ocs/v2.php/apps/files_publish/api/v1'
 
@@ -32,15 +34,15 @@ async function startPublish(nodes) {
 	const data = await ocsGet('/targets')
 	const targets = data?.ocs?.data || []
 	if (!targets.length) {
-		window.OC.Notification.showTemporary(t('files_publish', 'No publishing targets are configured. Ask an administrator to set up Zenodo or Figshare.'))
+		showInfo(t('files_publish', 'No publishing targets are configured. Ask an administrator to set up Zenodo or Figshare.'))
 		return
 	}
-	const fileids = nodes.map((n) => n.fileid).filter(Boolean)
-	if (!window.FilesPublishDialog) {
-		window.OC.Notification.showTemporary(t('files_publish', 'The publish dialog failed to load.'))
+	const fileids = (nodes || []).map((n) => n.fileid).filter(Boolean)
+	if (!fileids.length) {
+		showError(t('files_publish', 'No file selected to publish.'))
 		return
 	}
-	window.FilesPublishDialog.open(targets, fileids, { ocsGet, ocsPost })
+	openDialog(targets, fileids, { ocsGet, ocsPost })
 }
 
 async function runPublish(nodes) {
@@ -48,8 +50,8 @@ async function runPublish(nodes) {
 		await startPublish(nodes)
 	} catch (e) {
 		// Surface the real error instead of an opaque console TypeError.
-		window.OC.Notification.showTemporary('Publish: ' + (e && e.message ? e.message : e))
-		throw e
+		showError(t('files_publish', 'Publish failed') + ': ' + (e && e.message ? e.message : e))
+		console.error('[files_publish]', e)
 	}
 }
 
