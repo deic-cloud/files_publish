@@ -43,13 +43,23 @@ async function startPublish(nodes) {
 	window.FilesPublishDialog.open(targets, fileids, { ocsGet, ocsPost })
 }
 
+async function runPublish(nodes) {
+	try {
+		await startPublish(nodes)
+	} catch (e) {
+		// Surface the real error instead of an opaque console TypeError.
+		window.OC.Notification.showTemporary('Publish: ' + (e && e.message ? e.message : e))
+		throw e
+	}
+}
+
 registerFileAction({
 	id: 'files-publish',
 	displayName: () => t('files_publish', 'Publish…'),
 	title: () => t('files_publish', 'Publish to a research data repository'),
 	iconSvgInline: () => ICON,
 	enabled: ({ nodes }) => Array.isArray(nodes) && nodes.length > 0,
-	exec: async ({ nodes }) => { await startPublish([nodes]); return null },
-	execBatch: async ({ nodes }) => { await startPublish(nodes); return nodes.map(() => null) },
+	exec: async ({ nodes }) => { await runPublish(nodes); return null },
+	execBatch: async ({ nodes }) => { await runPublish(nodes); return nodes.map(() => null) },
 	order: 25,
 })
