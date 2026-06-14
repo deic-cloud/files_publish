@@ -149,7 +149,7 @@ class FigshareTarget extends AbstractHttpTarget {
 			'body'    => json_encode(['name' => $name, 'size' => $size, 'md5' => $md5]),
 		]);
 		if ($st < 200 || $st >= 300 || empty($body['location'])) {
-			return $this->l->t('Could not start Figshare upload for ') . $name;
+			return $this->l->t('Could not start Figshare upload for ') . $name . ' — ' . $this->errorText($body);
 		}
 		// fetch the file info to get the upload service URL + part list
 		[$ist, $info] = $this->http('GET', (string)$body['location'], ['headers' => $this->authHeader($token)]);
