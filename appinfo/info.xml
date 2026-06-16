@@ -5,7 +5,7 @@
 	<name>Data publishing</name>
 	<summary>Publish files and folders to research data repositories with a citable DOI</summary>
 	<description>Publish research outputs from Nextcloud to external repositories — Zenodo and Figshare — making them findable and giving them a citable DOI. A pluggable target-adapter design lets further destinations (Dataverse, a media platform, notebook hosting) be added without touching the core. Authors are prefilled from the user's connected ORCID iD.</description>
-	<version>1.3.1</version>
+	<version>1.3.2</version>
 	<licence>agpl</licence>
 	<author mail="fror@dtu.dk">Frederik Orellana, DTU</author>
 	<author>Lars Næsbye Christensen, DeIC (original ownCloud app)</author>

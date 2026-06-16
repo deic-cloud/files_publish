@@ -179,9 +179,12 @@ class FigshareTarget extends AbstractHttpTarget {
 		if ($token === '') {
 			return PublishResult::fail($this->l->t('Not authorized with Figshare.'));
 		}
-		$api  = $this->apiBase();
+		$api = $this->apiBase();
+		// Create with only known-good fields (same set as the verified upload
+		// path) plus the data location in the description — which always works.
+		// references + a native linked file are added best-effort AFTER create,
+		// so an unconfirmed field can never 400 the whole deposit.
 		$meta = $this->articleMetadata($metadata);
-		$meta['references'] = array_values($urls); // Figshare: list of reference URLs
 		$linksHtml = implode('<br/>', array_map(static fn ($u) => '<a href="' . $u . '">' . $u . '</a>', $urls));
 		$meta['description'] = ($meta['description'] ?? '')
 			. '<p>' . $this->l->t('The data for this record is hosted on ScienceData:') . '<br/>' . $linksHtml . '</p>';
@@ -195,13 +198,21 @@ class FigshareTarget extends AbstractHttpTarget {
 		}
 		$articleId = (int)preg_replace('#.*/articles/#', '', (string)$body['location']);
 
-		// Best-effort: add each URL as a linked file (no upload). The references
-		// field already carries the links if this isn't supported.
-		foreach ($urls as $u) {
-			$this->http('POST', $api . '/account/articles/' . $articleId . '/files', [
-				'headers' => $this->authHeader($token),
-				'body'    => json_encode(['link' => $u]),
-			]);
+		// Best-effort: record the URLs as article references.
+		$this->http('PUT', $api . '/account/articles/' . $articleId, [
+			'headers' => $this->authHeader($token),
+			'body'    => json_encode(['references' => array_values($urls)]),
+		]);
+		// A small pointer file uploaded normally (NOT a Figshare "linked file",
+		// which stamps the record with an inaccurate "Linked content is NOT
+		// stored on …" disclaimer). Mirrors the Zenodo pointer-file path so the
+		// draft has content and reads cleanly; best-effort.
+		$tmp = tempnam(sys_get_temp_dir(), 'fp_figshare_ptr');
+		if ($tmp !== false) {
+			file_put_contents($tmp,
+				$this->l->t('This record describes data hosted on ScienceData.') . "\n\n" . implode("\n", $urls) . "\n");
+			$this->uploadFile($token, $articleId, 'DATA-ON-SCIENCEDATA.txt', $tmp);
+			@unlink($tmp);
 		}
 
 		$doi = '';

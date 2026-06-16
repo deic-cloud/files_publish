@@ -31,12 +31,12 @@
 		</div>
 		<?php if ($t['id'] === 'figshare'): ?>
 		<div class="fp-row">
-			<label for="fp-figshare-personalToken"><?php p($l->t('Personal token')); ?></label>
+			<label for="fp-figshare-personalToken"><?php p($l->t('Personal token (testing only)')); ?></label>
 			<input type="password" id="fp-figshare-personalToken" data-key="personalToken" value=""
 			       autocomplete="new-password"
-			       placeholder="<?php p($t['extra']['hasPersonalToken'] ? $l->t('(set — unchanged if blank)') : $l->t('(optional — bypasses OAuth)')); ?>" />
+			       placeholder="<?php p($t['extra']['hasPersonalToken'] ? $l->t('(set — unchanged if blank)') : $l->t('(testing only — leave blank)')); ?>" />
 		</div>
-		<p class="fp-hint"><?php p($l->t('A Figshare personal token authenticates directly, skipping the OAuth authorize/redirect step. Recommended for institutional accounts where self-service OAuth apps are restricted. Leave blank to use the OAuth client credentials below instead.')); ?></p>
+		<p class="fp-hint"><strong><?php p($l->t('Testing only.')); ?></strong> <?php p($l->t('A personal token authenticates as its owner, so EVERY user\'s Figshare publications would be created under this one account. It bypasses OAuth (useful where self-service OAuth apps are restricted) but is NOT a multi-user solution — leave blank in production until per-user OAuth is available at the institution.')); ?></p>
 		<div class="fp-row">
 			<label for="fp-figshare-authBaseUrl"><?php p($l->t('Authorize base URL')); ?></label>
 			<input type="text" id="fp-figshare-authBaseUrl" data-key="authBaseUrl" value="<?php p($t['authBaseUrl']); ?>"
