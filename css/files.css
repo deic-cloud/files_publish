@@ -22,6 +22,10 @@
 .fp-hint { color: var(--color-text-maxcontrast); font-size: .9em; margin-top: 2px; }
 .fp-dialog-foot { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-top: 12px; }
 .fp-dialog-foot .fp-msg { color: var(--color-text-maxcontrast); margin-right: auto; }
+.fp-dialog-foot .fp-msg.fp-msg-error { color: var(--color-error, #e9322d); }
+.fp-aslink-wrap { margin: 4px 0 8px; }
+.fp-aslink-label { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 600; }
+.fp-aslink-label input { width: auto; cursor: pointer; }
 
 /* Core resets input{cursor:pointer} / label{cursor:pointer}; restore sensible
    cursors for the publish form so text fields don't look clickable. */

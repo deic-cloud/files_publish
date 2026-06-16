@@ -46,6 +46,12 @@ class FigshareTarget extends AbstractHttpTarget {
 		return rtrim($this->cfg('baseUrl', 'https://api.figshare.com/v2'), '/');
 	}
 
+	/** figshare.com personal accounts: 20 GB. Institutional (data.dtu.dk)
+	 *  pools are larger — raise the admin "Max publish size" there. */
+	protected function defaultMaxGB(): float {
+		return 20;
+	}
+
 	private function authBase(): string {
 		return rtrim($this->cfg('authBaseUrl', 'https://figshare.com'), '/');
 	}
@@ -166,6 +172,46 @@ class FigshareTarget extends AbstractHttpTarget {
 
 		$landing = $this->portalBase() . '/account/articles/' . $articleId;
 		return PublishResult::ok((string)$articleId, $landing, $doi);
+	}
+
+	public function publishLink(array $metadata, array $urls, array $auth): PublishResult {
+		$token = $auth['access_token'] ?? '';
+		if ($token === '') {
+			return PublishResult::fail($this->l->t('Not authorized with Figshare.'));
+		}
+		$api  = $this->apiBase();
+		$meta = $this->articleMetadata($metadata);
+		$meta['references'] = array_values($urls); // Figshare: list of reference URLs
+		$linksHtml = implode('<br/>', array_map(static fn ($u) => '<a href="' . $u . '">' . $u . '</a>', $urls));
+		$meta['description'] = ($meta['description'] ?? '')
+			. '<p>' . $this->l->t('The data for this record is hosted on ScienceData:') . '<br/>' . $linksHtml . '</p>';
+
+		[$status, $body] = $this->http('POST', $api . '/account/articles', [
+			'headers' => $this->authHeader($token),
+			'body'    => json_encode($meta),
+		]);
+		if ($status < 200 || $status >= 300 || empty($body['location'])) {
+			return PublishResult::fail($this->l->t('Figshare rejected the article: ') . $this->errorText($body));
+		}
+		$articleId = (int)preg_replace('#.*/articles/#', '', (string)$body['location']);
+
+		// Best-effort: add each URL as a linked file (no upload). The references
+		// field already carries the links if this isn't supported.
+		foreach ($urls as $u) {
+			$this->http('POST', $api . '/account/articles/' . $articleId . '/files', [
+				'headers' => $this->authHeader($token),
+				'body'    => json_encode(['link' => $u]),
+			]);
+		}
+
+		$doi = '';
+		[$dst, $dbody] = $this->http('POST', $api . '/account/articles/' . $articleId . '/reserve_doi', [
+			'headers' => $this->authHeader($token),
+		]);
+		if ($dst >= 200 && $dst < 300 && !empty($dbody['doi'])) {
+			$doi = (string)$dbody['doi'];
+		}
+		return PublishResult::ok((string)$articleId, $this->portalBase() . '/account/articles/' . $articleId, $doi);
 	}
 
 	/** Figshare initiate/parts/complete chunked upload. Returns '' on success or an error string. */

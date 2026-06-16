@@ -4,6 +4,7 @@
 $bytes = (int)($_['bytes'] ?? 0);
 $target = $_['targetLabel'] ?? '';
 $expired = !empty($_['expired']);
+$link = !empty($_['link']);
 
 // Rough upload-time estimate. Single transatlantic TLS stream to Figshare's
 // AWS (us-east-1) is latency-bound well below the local uplink; ~10 MB/s
@@ -29,6 +30,10 @@ $sizeText = $bytes > 0 ? \OCP\Util::humanFileSize($bytes) : '';
 	<?php else: ?>
 
 	<div id="fpProg">
+		<?php if ($link): ?>
+		<h2><?php p($l->t('Creating a record on %s…', [$target])); ?></h2>
+		<p><?php p($l->t('Creating a public link to your data on ScienceData and depositing a record that points to it. This is quick.')); ?></p>
+		<?php else: ?>
 		<h2><?php p($l->t('Uploading to %s…', [$target])); ?></h2>
 		<p>
 			<?php if ($sizeText !== ''): ?>
@@ -39,6 +44,7 @@ $sizeText = $bytes > 0 ? \OCP\Util::humanFileSize($bytes) : '';
 		<?php if ($etaText !== ''): ?>
 		<p style="color:var(--color-text-maxcontrast);"><?php p($l->t('Estimated time: %s', [$etaText])); ?></p>
 		<?php endif; ?>
+		<?php endif; ?>
 		<div class="fp-bar"><div class="fp-bar-fill"></div></div>
 	</div>
 
@@ -48,7 +54,11 @@ $sizeText = $bytes > 0 ? \OCP\Util::humanFileSize($bytes) : '';
 			<?php p($l->t('Reserved DOI:')); ?> <strong id="fpDoi"></strong>
 			<br><span style="font-size:.8em;color:var(--color-text-maxcontrast);"><?php p($l->t('(becomes active once you submit the record)')); ?></span>
 		</p>
+		<?php if ($link): ?>
+		<p><?php p($l->t('A record linking to your data on ScienceData has been created as a draft. Review the metadata and submit it on the repository to mint the DOI and make it public:')); ?></p>
+		<?php else: ?>
 		<p><?php p($l->t('Your files have been uploaded as a draft. Review the metadata and submit it on the repository to mint the DOI and make it public:')); ?></p>
+		<?php endif; ?>
 		<p><a id="fpLanding" class="button primary" target="_blank" rel="noopener"><?php p($l->t('Review and submit')); ?></a></p>
 		<p style="color:var(--color-text-maxcontrast);"><?php p($l->t('You can close this window.')); ?></p>
 	</div>

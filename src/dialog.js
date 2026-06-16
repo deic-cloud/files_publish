@@ -95,6 +95,22 @@ export function openDialog(targets, fileids, api) {
 
 	const formArea = el('div', { class: 'fp-form' })
 	box.appendChild(formArea)
+
+	// Always-available "publish a link instead of uploading" option (shown for
+	// targets that support it). Keeps the data on ScienceData and deposits a
+	// citable record that links to a public share — preferred for large data.
+	const aslinkBox = el('input', { type: 'checkbox', class: 'fp-aslink' })
+	const aslinkWrap = el('div', { class: 'fp-aslink-wrap' }, [
+		el('label', {
+			class: 'fp-aslink-label',
+			title: t('files_publish', 'Keeps the data on ScienceData and deposits a citable record that links to a public share. Recommended for large datasets.'),
+		}, [
+			aslinkBox,
+			el('span', { text: t('files_publish', 'Publish a link to the data instead of uploading it') }),
+		]),
+	])
+	box.appendChild(aslinkWrap)
+
 	const footer = el('div', { class: 'fp-dialog-foot' }, [
 		el('span', { class: 'fp-msg' }),
 		el('button', { class: 'fp-cancel', text: t('files_publish', 'Cancel') }),
@@ -107,6 +123,8 @@ export function openDialog(targets, fileids, api) {
 	const msg = footer.querySelector('.fp-msg')
 
 	async function loadSchema(targetId) {
+		const tgt = targets.find((x) => x.id === targetId)
+		aslinkWrap.style.display = (tgt && tgt.supportsLink) ? '' : 'none'
 		// Preserve anything already entered (fields shared across targets use
 		// the same key) so switching target doesn't wipe the form.
 		const saved = {}
@@ -129,9 +147,12 @@ export function openDialog(targets, fileids, api) {
 	picker.addEventListener('change', (e) => loadSchema(e.target.value))
 	loadSchema(targets[0].id)
 
-	footer.querySelector('.fp-go').addEventListener('click', async () => {
+	function currentTargetId() {
 		const checked = box.querySelector('input[name="fp-target"]:checked')
-		const targetId = checked ? checked.value : targets[0].id
+		return checked ? checked.value : targets[0].id
+	}
+
+	function collectMetadata() {
 		const metadata = {}
 		let missing = false
 		current.schema.forEach((f) => {
@@ -145,12 +166,10 @@ export function openDialog(targets, fileids, api) {
 				if (f.required && !inp.value.trim()) missing = true
 			}
 		})
-		if (missing) { msg.textContent = t('files_publish', 'Please fill the required fields.'); return }
+		return missing ? null : metadata
+	}
 
-		msg.textContent = t('files_publish', 'Starting…')
-		const data = await api.ocsPost('/publish', buildBody(targetId, fileids, metadata))
-		if (data?.ocs?.meta?.status !== 'ok') { msg.textContent = t('files_publish', 'Could not start publishing.'); return }
-		const step = data.ocs.data
+	function openPopup(step) {
 		const popup = window.open(step.url, '_blank', 'width=680,height=780')
 		window.addEventListener('message', function onMsg(ev) {
 			if (ev.data && ev.data.filesPublish) {
@@ -160,6 +179,43 @@ export function openDialog(targets, fileids, api) {
 			}
 		})
 		if (!popup) { msg.textContent = ''; showError(t('files_publish', 'Please allow popups and try again.')) }
+	}
+
+	async function proceed(targetId, metadata, link) {
+		msg.classList.remove('fp-msg-error')
+		const oldLink = footer.querySelector('.fp-link'); if (oldLink) oldLink.remove()
+		msg.textContent = t('files_publish', 'Starting…')
+		const body = buildBody(targetId, fileids, metadata)
+		if (link) body.append('link', '1')
+		const data = await api.ocsPost('/publish', body)
+		if (data?.ocs?.meta?.status !== 'ok') { msg.textContent = t('files_publish', 'Could not start publishing.'); return }
+		const step = data.ocs.data
+		// Pre-flight size block: too big to upload. Offer the link-deposit path
+		// (keep the data on ScienceData; deposit a record that links to it).
+		if (step.step === 'too-large') {
+			msg.textContent = step.message || t('files_publish', 'The selection is too large to publish.')
+			msg.classList.add('fp-msg-error')
+			if (step.canLink) {
+				const b = el('button', {
+					class: 'fp-link',
+					title: t('files_publish', 'Keep the data on ScienceData and publish a citable record that links to a public share of it.'),
+					text: t('files_publish', 'Publish a link instead'),
+				})
+				b.addEventListener('click', () => proceed(targetId, metadata, true))
+				footer.insertBefore(b, footer.querySelector('.fp-go'))
+			}
+			return
+		}
+		openPopup(step)
+	}
+
+	footer.querySelector('.fp-go').addEventListener('click', () => {
+		const metadata = collectMetadata()
+		if (!metadata) { msg.textContent = t('files_publish', 'Please fill the required fields.'); return }
+		const tid = currentTargetId()
+		const tgt = targets.find((x) => x.id === tid)
+		const asLink = !!(tgt && tgt.supportsLink && aslinkBox.checked)
+		proceed(tid, metadata, asLink)
 	})
 
 	document.body.appendChild(overlay)

@@ -29,6 +29,11 @@ class ZenodoTarget extends AbstractHttpTarget {
 		return rtrim($this->cfg('baseUrl', 'https://zenodo.org'), '/');
 	}
 
+	/** Zenodo: 50 GB total per record (deposit) by default. */
+	protected function defaultMaxGB(): float {
+		return 50;
+	}
+
 	public function getMetadataSchema(): array {
 		return [
 			['key' => 'title',       'label' => $this->l->t('Title'),       'type' => 'text',     'required' => true],
@@ -134,6 +139,44 @@ class ZenodoTarget extends AbstractHttpTarget {
 		}
 
 		// Draft left for the user to review and submit on Zenodo.
+		return PublishResult::ok($depositId, $landing, $doi);
+	}
+
+	public function publishLink(array $metadata, array $urls, array $auth): PublishResult {
+		$token = $auth['access_token'] ?? '';
+		if ($token === '') {
+			return PublishResult::fail($this->l->t('Not authorized with Zenodo.'));
+		}
+		$api  = $this->baseUrl() . '/api/deposit/depositions';
+		$meta = $this->zenodoMetadata($metadata);
+		// Record the data location in the description and as related identifiers.
+		$linksHtml = implode('<br/>', array_map(static fn ($u) => '<a href="' . $u . '">' . $u . '</a>', $urls));
+		$meta['description'] = ($meta['description'] ?? '')
+			. '<p>' . $this->l->t('The data for this record is hosted on ScienceData:') . '<br/>' . $linksHtml . '</p>';
+		$meta['related_identifiers'] = array_map(static fn ($u) => [
+			'identifier' => $u, 'relation' => 'isIdenticalTo', 'scheme' => 'url',
+		], array_values($urls));
+
+		[$status, $body] = $this->http('POST', $api . '?access_token=' . urlencode($token), [
+			'headers' => ['Content-Type: application/json'],
+			'body'    => json_encode(['metadata' => $meta]),
+		]);
+		if ($status < 200 || $status >= 300 || empty($body['id'])) {
+			return PublishResult::fail($this->l->t('Zenodo rejected the deposit: ') . $this->errorText($body));
+		}
+		$depositId = (string)$body['id'];
+		$bucket    = $body['links']['bucket'] ?? '';
+		$landing   = $body['links']['html'] ?? ($this->baseUrl() . '/deposit/' . $depositId);
+		$doi       = $body['metadata']['prereserve_doi']['doi'] ?? '';
+
+		// A tiny pointer file so the draft isn't empty and is clickable.
+		if ($bucket !== '') {
+			$pointer = $this->l->t('This record describes data hosted on ScienceData.') . "\n\n" . implode("\n", $urls) . "\n";
+			$this->http('PUT', rtrim($bucket, '/') . '/DATA-ON-SCIENCEDATA.txt?access_token=' . urlencode($token), [
+				'headers' => ['Content-Type: text/plain'],
+				'body'    => $pointer,
+			]);
+		}
 		return PublishResult::ok($depositId, $landing, $doi);
 	}
 

@@ -28,6 +28,13 @@ interface PublishTarget {
 	/** True once an admin has configured this target (credentials/URL). */
 	public function isConfigured(): bool;
 
+	/**
+	 * Maximum total size (bytes) of a single publish, for a pre-flight block.
+	 * 0 = no limit. Bounds both the repository's per-record policy and our own
+	 * synchronous upload pipeline; admin-configurable, no live probe.
+	 */
+	public function maxUploadBytes(): int;
+
 	/** 'public-doi' | 'community' | 'controlled-group' — informs the UI copy. */
 	public function getAudienceModel(): string;
 
@@ -68,4 +75,19 @@ interface PublishTarget {
 	 * @param array<string,mixed>  $auth
 	 */
 	public function publish(array $files, array $metadata, array $auth): PublishResult;
+
+	/** Whether this target can deposit a metadata-only record that links to
+	 *  externally-hosted data (kept on ScienceData) instead of uploading. */
+	public function supportsLinkDeposit(): bool;
+
+	/**
+	 * Deposit a metadata-only record that references $urls (public ScienceData
+	 * share links) rather than uploading the bytes — for large data that
+	 * should stay on ScienceData while still getting a citable record/DOI.
+	 *
+	 * @param array<string,mixed> $metadata
+	 * @param string[]            $urls
+	 * @param array<string,mixed> $auth
+	 */
+	public function publishLink(array $metadata, array $urls, array $auth): PublishResult;
 }

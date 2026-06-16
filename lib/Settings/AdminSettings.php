@@ -31,9 +31,11 @@ class AdminSettings implements ISettings {
 				'label'       => $t->getLabel(),
 				'configured'  => $t->isConfigured(),
 				'baseUrl'     => $this->configService->get($id, 'baseUrl'),
-				'authBaseUrl' => $this->configService->get($id, 'authBaseUrl'),
-				'portalUrl'   => $this->configService->get($id, 'portalUrl'),
-				'clientAppID' => $this->configService->get($id, 'clientAppID'),
+				'authBaseUrl'  => $this->configService->get($id, 'authBaseUrl'),
+				'portalUrl'    => $this->configService->get($id, 'portalUrl'),
+				'clientAppID'  => $this->configService->get($id, 'clientAppID'),
+				'maxPublishGB' => $this->configService->get($id, 'maxPublishGB'),
+				'maxDefaultGB' => (string)(int)round($t->maxUploadBytes() / (1024 * 1024 * 1024)),
 				'extra'       => $id === 'figshare'
 					? [
 						'defaultCategory'  => $this->configService->get($id, 'defaultCategory'),

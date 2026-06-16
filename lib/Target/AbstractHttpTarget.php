@@ -34,6 +34,24 @@ abstract class AbstractHttpTarget implements PublishTarget {
 		return [];
 	}
 
+	/** Per-target default cap (GB) when the admin hasn't set one; 0 = none. */
+	protected function defaultMaxGB(): float {
+		return 0;
+	}
+
+	public function maxUploadBytes(): int {
+		$gb = (float)$this->cfg('maxPublishGB', (string)$this->defaultMaxGB());
+		return $gb > 0 ? (int)round($gb * 1024 * 1024 * 1024) : 0;
+	}
+
+	public function supportsLinkDeposit(): bool {
+		return true;
+	}
+
+	public function publishLink(array $metadata, array $urls, array $auth): PublishResult {
+		return PublishResult::fail($this->l->t('Link deposit is not supported for this target.'));
+	}
+
 	protected function cfg(string $key, string $default = ''): string {
 		return $this->configService->get($this->getId(), $key, $default);
 	}

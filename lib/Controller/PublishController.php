@@ -48,6 +48,7 @@ class PublishController extends Controller {
 			'targetLabel' => $t !== null ? $t->getLabel() : $target,
 			'runUrl'      => $this->urlGenerator->linkToRoute('files_publish.publish.execute', ['target' => $target, 'job' => $job]),
 			'bytes'       => (int)($jobData['bytes'] ?? 0),
+			'link'        => !empty($jobData['link']),
 			'expired'     => ($t === null || $jobData === null),
 		], TemplateResponse::RENDER_AS_GUEST);
 	}
@@ -72,6 +73,23 @@ class PublishController extends Controller {
 		// Release the session lock before the (seconds-to-minutes) upload so the
 		// user's other tabs and background requests aren't blocked meanwhile.
 		$this->session->close();
+
+		// Link deposit: no upload — create public share link(s) and deposit a
+		// metadata-only record that references them (data stays on ScienceData).
+		if (!empty($jobData['link'])) {
+			$urls = $this->publishService->createShareLinks($uid, $jobData['fileids']);
+			if (empty($urls)) {
+				return new DataResponse(['ok' => false, 'message' => 'Could not create a public share link (link sharing may be disabled).']);
+			}
+			$res = $t->publishLink($jobData['metadata'], $urls, $auth);
+			if (!$res->success) {
+				return new DataResponse(['ok' => false, 'message' => $res->message ?: 'Publishing failed.']);
+			}
+			foreach ($jobData['fileids'] as $fileid) {
+				$this->publishService->recordResult($uid, (int)$fileid, $target, $res);
+			}
+			return new DataResponse(['ok' => true, 'doi' => $res->doi, 'landingUrl' => $res->landingUrl, 'targetLabel' => $t->getLabel()]);
+		}
 
 		$tmpFiles = [];
 		try {

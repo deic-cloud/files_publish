@@ -58,6 +58,13 @@
 			<input type="password" id="fp-<?php p($t['id']); ?>-clientSecret" data-key="clientSecret" value=""
 			       autocomplete="new-password" placeholder="<?php p($l->t('(unchanged if blank)')); ?>" />
 		</div>
+		<div class="fp-row">
+			<label for="fp-<?php p($t['id']); ?>-maxPublishGB"><?php p($l->t('Max publish size (GB)')); ?></label>
+			<input type="text" inputmode="numeric" id="fp-<?php p($t['id']); ?>-maxPublishGB" data-key="maxPublishGB"
+			       value="<?php p($t['maxPublishGB']); ?>"
+			       placeholder="<?php p($l->t('default %s', [$t['maxDefaultGB']])); ?>" />
+		</div>
+		<p class="fp-hint"><?php p($l->t('Uploads larger than this are blocked before they start (the user is steered to keep the data on ScienceData and publish a record linking to a share). This also bounds the synchronous upload — lower it if large uploads time out behind your proxy. Blank uses the default shown.')); ?></p>
 		<?php if ($t['id'] === 'figshare'): ?>
 		<div class="fp-row">
 			<label for="fp-figshare-defaultCategory"><?php p($l->t('Default category ID')); ?></label>

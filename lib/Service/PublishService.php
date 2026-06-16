@@ -9,9 +9,14 @@ use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
 use OCP\Files\Node;
+use OCP\Constants;
 use OCP\IConfig;
 use OCP\ISession;
+use OCP\ITempManager;
+use OCP\IURLGenerator;
 use OCP\IUserManager;
+use OCP\Share\IManager as IShareManager;
+use OCP\Share\IShare;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -25,8 +30,55 @@ class PublishService {
 		private IUserManager   $userManager,
 		private IConfig        $config,
 		private ISession       $session,
+		private ITempManager   $tempManager,
+		private IShareManager  $shareManager,
+		private IURLGenerator  $urlGenerator,
 		private LoggerInterface $logger,
 	) {
+	}
+
+	/**
+	 * Public READ share links for the selected nodes (reusing an existing link
+	 * if one is present), for a metadata-only link deposit. Returns the URLs.
+	 *
+	 * @param int[] $fileids
+	 * @return string[]
+	 */
+	public function createShareLinks(string $uid, array $fileids): array {
+		$userFolder = $this->rootFolder->getUserFolder($uid);
+		$urls = [];
+		foreach ($fileids as $id) {
+			$found = $userFolder->getById((int)$id);
+			if (empty($found)) {
+				continue;
+			}
+			$url = $this->ensurePublicLink($uid, $found[0]);
+			if ($url !== null) {
+				$urls[] = $url;
+			}
+		}
+		return $urls;
+	}
+
+	private function ensurePublicLink(string $uid, Node $node): ?string {
+		try {
+			$existing = $this->shareManager->getSharesBy($uid, IShare::TYPE_LINK, $node, false, 1);
+			if (!empty($existing)) {
+				$token = $existing[0]->getToken();
+			} else {
+				$share = $this->shareManager->newShare();
+				$share->setNode($node);
+				$share->setShareType(IShare::TYPE_LINK);
+				$share->setPermissions(Constants::PERMISSION_READ);
+				$share->setSharedBy($uid);
+				$share = $this->shareManager->createShare($share);
+				$token = $share->getToken();
+			}
+			return $this->urlGenerator->getAbsoluteURL('/index.php/s/' . $token);
+		} catch (\Throwable $e) {
+			$this->logger->error('files_publish: public link failed: ' . $e->getMessage());
+			return null;
+		}
 	}
 
 	// ── Pending job (survives the OAuth popup round-trip) ──────────────────────
@@ -125,7 +177,9 @@ class PublishService {
 	}
 
 	private function zipFolder(Folder $folder, array &$tmpFiles): ?string {
-		$tmp = tempnam(sys_get_temp_dir(), 'files_publish_') . '.zip';
+		// Use NC's temp manager so the (potentially large) zip lands on the
+		// configured 'tempdirectory' volume, not a small /tmp.
+		$tmp = $this->tempManager->getTemporaryFile('.zip') ?: (tempnam(sys_get_temp_dir(), 'files_publish_') . '.zip');
 		$tmpFiles[] = $tmp;
 		$zip = new \ZipArchive();
 		if ($zip->open($tmp, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
