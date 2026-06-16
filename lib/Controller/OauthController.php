@@ -64,6 +64,7 @@ class OauthController extends Controller {
 		} else {
 			$tokenUrl = rtrim($this->configService->get('zenodo', 'baseUrl', 'https://zenodo.org'), '/') . '/oauth/token';
 		}
+		$redirectUri = $this->configService->get($target, 'redirectUri');
 		try {
 			$response = $this->clientService->newClient()->post($tokenUrl, [
 				'body' => [
@@ -71,7 +72,7 @@ class OauthController extends Controller {
 					'client_secret' => $this->configService->get($target, 'clientSecret'),
 					'grant_type'    => 'authorization_code',
 					'code'          => $code,
-					'redirect_uri'  => $this->configService->get($target, 'redirectUri'),
+					'redirect_uri'  => $redirectUri,
 				],
 				'headers' => ['Accept' => 'application/json'],
 				'timeout' => 20,
@@ -79,7 +80,11 @@ class OauthController extends Controller {
 			$data = json_decode((string)$response->getBody(), true);
 			return (string)($data['access_token'] ?? '');
 		} catch (\Throwable $e) {
-			$this->logger->error('files_publish: token exchange failed for ' . $target . ': ' . $e->getMessage());
+			// Keep redirect_uri + token URL in the error: an invalid_grant here is
+			// almost always a redirect_uri/code-reuse mismatch, and this is the
+			// only place to see what we actually sent.
+			$this->logger->error('files_publish: token exchange failed for ' . $target
+				. ' tokenUrl=' . $tokenUrl . ' redirect_uri=' . $redirectUri . ': ' . $e->getMessage());
 			return '';
 		}
 	}
