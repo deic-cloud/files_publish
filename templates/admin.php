@@ -31,10 +31,23 @@
 		</div>
 		<?php if ($t['id'] === 'figshare'): ?>
 		<div class="fp-row">
+			<label for="fp-figshare-personalToken"><?php p($l->t('Personal token')); ?></label>
+			<input type="password" id="fp-figshare-personalToken" data-key="personalToken" value=""
+			       autocomplete="new-password"
+			       placeholder="<?php p($t['extra']['hasPersonalToken'] ? $l->t('(set — unchanged if blank)') : $l->t('(optional — bypasses OAuth)')); ?>" />
+		</div>
+		<p class="fp-hint"><?php p($l->t('A Figshare personal token authenticates directly, skipping the OAuth authorize/redirect step. Recommended for institutional accounts where self-service OAuth apps are restricted. Leave blank to use the OAuth client credentials below instead.')); ?></p>
+		<div class="fp-row">
 			<label for="fp-figshare-authBaseUrl"><?php p($l->t('Authorize base URL')); ?></label>
 			<input type="text" id="fp-figshare-authBaseUrl" data-key="authBaseUrl" value="<?php p($t['authBaseUrl']); ?>"
 			       placeholder="https://figshare.com" />
 		</div>
+		<div class="fp-row">
+			<label for="fp-figshare-portalUrl"><?php p($l->t('Web portal URL')); ?></label>
+			<input type="text" id="fp-figshare-portalUrl" data-key="portalUrl" value="<?php p($t['portalUrl']); ?>"
+			       placeholder="https://data.dtu.dk" />
+		</div>
+		<p class="fp-hint"><?php p($l->t('Where users review and submit their draft, and where the public record will live — the institutional Figshare portal (e.g. https://data.dtu.dk). Defaults to the authorize base URL if left blank.')); ?></p>
 		<?php endif; ?>
 		<div class="fp-row">
 			<label for="fp-<?php p($t['id']); ?>-clientAppID"><?php p($l->t('Client ID')); ?></label>

@@ -16,8 +16,10 @@ return [
 	],
 	'routes' => [
 		// OAuth redirect target (registered with each repository)
-		['name' => 'oauth#callback',   'url' => '/oauth/{target}/callback', 'verb' => 'GET'],
-		// Runs the upload, streams progress (text/event-ish); session-authenticated
-		['name' => 'publish#run',      'url' => '/publish/{target}/run',    'verb' => 'GET'],
+		['name' => 'oauth#callback',    'url' => '/oauth/{target}/callback',   'verb' => 'GET'],
+		// Progress page shown in the popup; kicks off the upload and shows result
+		['name' => 'publish#progress',  'url' => '/publish/{target}/progress', 'verb' => 'GET'],
+		// Performs the upload and returns JSON; called by the progress page
+		['name' => 'publish#execute',   'url' => '/publish/{target}/run',      'verb' => 'GET'],
 	],
 ];

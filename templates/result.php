@@ -9,7 +9,8 @@ $ok = ($_['status'] ?? '') === 'ok';
 		<?php if (!empty($_['doi'])): ?>
 		<p style="font-size:1.1em;">
 			<?php p($l->t('Reserved DOI:')); ?>
-			<strong><a href="https://doi.org/<?php p($_['doi']); ?>" target="_blank" rel="noopener"><?php p($_['doi']); ?></a></strong>
+			<strong><?php p($_['doi']); ?></strong>
+			<br><span style="font-size:.8em;color:var(--color-text-maxcontrast);"><?php p($l->t('(becomes active once you submit the record)')); ?></span>
 		</p>
 		<?php endif; ?>
 		<p><?php p($l->t('Your files have been uploaded as a draft. Review the metadata and submit it on the repository to mint the DOI and make it public:')); ?></p>

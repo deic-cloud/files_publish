@@ -50,6 +50,25 @@ class PublishService {
 		return $job;
 	}
 
+	/** Read a parked job without consuming it (for the progress page). */
+	public function peekJob(string $id): ?array {
+		$all = $this->session->get('files_publish_jobs') ?: [];
+		return $all[$id] ?? null;
+	}
+
+	/** Total size of the selection, for a rough upload-time estimate. */
+	public function estimateBytes(string $uid, array $fileids): int {
+		$userFolder = $this->rootFolder->getUserFolder($uid);
+		$total = 0;
+		foreach ($fileids as $id) {
+			$found = $userFolder->getById((int)$id);
+			if (!empty($found)) {
+				$total += (int)$found[0]->getSize();
+			}
+		}
+		return $total;
+	}
+
 	public function storeToken(string $target, string $token): void {
 		$this->session->set('files_publish_token_' . $target, $token);
 	}

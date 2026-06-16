@@ -29,6 +29,11 @@ abstract class AbstractHttpTarget implements PublishTarget {
 		return 'public-doi';
 	}
 
+	/** OAuth-only by default; targets with a personal-token option override. */
+	public function getDirectAuth(): array {
+		return [];
+	}
+
 	protected function cfg(string $key, string $default = ''): string {
 		return $this->configService->get($this->getId(), $key, $default);
 	}

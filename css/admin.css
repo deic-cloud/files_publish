@@ -1,13 +1,17 @@
+/* Keep the heading clear of the app-navigation toggle (hamburger) at top-left. */
+#filesPublishAdmin > h2 { margin-top: 22px; }
+
 #filesPublishAdmin .fp-target {
 	border: 1px solid var(--color-border); border-radius: var(--border-radius, 6px);
 	padding: 10px 16px; margin: 16px 0;
 }
 #filesPublishAdmin legend { font-weight: 600; padding: 0 6px; }
 #filesPublishAdmin .fp-state { font-size: .8em; padding: 1px 8px; border-radius: 10px; margin-left: 6px; }
-#filesPublishAdmin .fp-state.on  { background: var(--color-success, #2d7d46); color: #fff; }
+#filesPublishAdmin .fp-state.on  { background: #28a745; color: #fff; }
 #filesPublishAdmin .fp-state.off { background: var(--color-background-dark); color: var(--color-text-maxcontrast); }
 #filesPublishAdmin .fp-row { margin: 8px 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 #filesPublishAdmin .fp-row label { width: 200px; }
 #filesPublishAdmin .fp-row input { width: 360px; max-width: 60vw; }
 #filesPublishAdmin .fp-row code { user-select: all; background: var(--color-background-dark); padding: 2px 6px; border-radius: 4px; }
 #filesPublishAdmin .fp-msg { margin-left: 10px; color: var(--color-text-maxcontrast); }
+#filesPublishAdmin .fp-hint { margin: -2px 0 10px 0; max-width: 560px; font-size: .9em; color: var(--color-text-maxcontrast); }

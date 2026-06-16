@@ -67,18 +67,22 @@ class ApiController extends OCSController {
 		if ($t === null || !$t->isConfigured()) {
 			return new DataResponse(['error' => 'Unknown target'], 404);
 		}
+		$uid = $this->userSession->getUser()?->getUID() ?? '';
+		$ids = array_map('intval', $fileids);
 		$jobId = $this->publishService->storeJob([
 			'target'   => $target,
-			'fileids'  => array_map('intval', $fileids),
+			'fileids'  => $ids,
 			'metadata' => $metadata,
+			'bytes'    => $this->publishService->estimateBytes($uid, $ids),
 		]);
+		// Both paths land on the progress page; for OAuth it's reached after the
+		// authorize round-trip (the callback redirects there).
+		$progressUrl = $this->urlGenerator->linkToRoute('files_publish.publish.progress', ['target' => $target, 'job' => $jobId]);
 		$authUrl = $t->getAuthorizeUrl($jobId);
 		if ($authUrl !== '') {
 			return new DataResponse(['step' => 'oauth', 'url' => $authUrl]);
 		}
-		// No interactive auth: go straight to the run endpoint
-		$runUrl = $this->urlGenerator->linkToRoute('files_publish.publish.run', ['target' => $target, 'job' => $jobId]);
-		return new DataResponse(['step' => 'run', 'url' => $runUrl]);
+		return new DataResponse(['step' => 'run', 'url' => $progressUrl]);
 	}
 
 	// ── Admin ───────────────────────────────────────────────────────────────
@@ -95,6 +99,7 @@ class ApiController extends OCSController {
 			];
 			if ($id === 'figshare') {
 				$cfg[$id]['authBaseUrl']     = $this->configService->get($id, 'authBaseUrl');
+				$cfg[$id]['portalUrl']       = $this->configService->get($id, 'portalUrl');
 				$cfg[$id]['defaultCategory'] = $this->configService->get($id, 'defaultCategory');
 				$cfg[$id]['defaultLicense']  = $this->configService->get($id, 'defaultLicense');
 			}
@@ -112,7 +117,7 @@ class ApiController extends OCSController {
 			$this->configService->set($target, 'redirectUri',
 				$this->urlGenerator->linkToRouteAbsolute('files_publish.oauth.callback', ['target' => $target]));
 		}
-		$this->configService->setMany($target, $values, ['clientSecret']);
+		$this->configService->setMany($target, $values, ['clientSecret', 'personalToken']);
 		return new DataResponse(['msg' => 'Saved']);
 	}
 }

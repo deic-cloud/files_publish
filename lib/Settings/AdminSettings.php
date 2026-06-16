@@ -32,11 +32,13 @@ class AdminSettings implements ISettings {
 				'configured'  => $t->isConfigured(),
 				'baseUrl'     => $this->configService->get($id, 'baseUrl'),
 				'authBaseUrl' => $this->configService->get($id, 'authBaseUrl'),
+				'portalUrl'   => $this->configService->get($id, 'portalUrl'),
 				'clientAppID' => $this->configService->get($id, 'clientAppID'),
 				'extra'       => $id === 'figshare'
 					? [
-						'defaultCategory' => $this->configService->get($id, 'defaultCategory'),
-						'defaultLicense'  => $this->configService->get($id, 'defaultLicense'),
+						'defaultCategory'  => $this->configService->get($id, 'defaultCategory'),
+						'defaultLicense'   => $this->configService->get($id, 'defaultLicense'),
+						'hasPersonalToken' => $this->configService->get($id, 'personalToken') !== '',
 					] : [],
 				'redirectUri' => $this->urlGenerator->linkToRouteAbsolute('files_publish.oauth.callback', ['target' => $id]),
 			];

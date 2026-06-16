@@ -10,8 +10,13 @@ namespace OCA\FilesPublish\Target;
  * MD5 checksum, then reserve a DOI. Left unpublished for the user to review
  * and submit on Figshare.
  *
- * Admin config keys: baseUrl (API), authBaseUrl, clientAppID, clientSecret,
- * defaultCategory, defaultLicense.
+ * Admin config keys: baseUrl (API), authBaseUrl, portalUrl, clientAppID,
+ * clientSecret, personalToken, defaultCategory, defaultLicense.
+ *
+ * Two auth modes: OAuth2 authorization_code, or — preferred for institutional
+ * accounts where self-service OAuth is locked down — a personal API token,
+ * which Figshare accepts in the same `Authorization: token …` header. When a
+ * personal token is set we skip the OAuth round-trip entirely.
  */
 class FigshareTarget extends AbstractHttpTarget {
 	public function getId(): string {
@@ -23,7 +28,18 @@ class FigshareTarget extends AbstractHttpTarget {
 	}
 
 	public function isConfigured(): bool {
-		return $this->cfg('clientAppID') !== '' && $this->apiBase() !== '';
+		// A personal token is sufficient on its own; otherwise need the OAuth app.
+		return $this->personalToken() !== ''
+			|| ($this->cfg('clientAppID') !== '' && $this->apiBase() !== '');
+	}
+
+	private function personalToken(): string {
+		return $this->cfg('personalToken');
+	}
+
+	public function getDirectAuth(): array {
+		$token = $this->personalToken();
+		return $token !== '' ? ['access_token' => $token] : [];
 	}
 
 	private function apiBase(): string {
@@ -32,6 +48,17 @@ class FigshareTarget extends AbstractHttpTarget {
 
 	private function authBase(): string {
 		return rtrim($this->cfg('authBaseUrl', 'https://figshare.com'), '/');
+	}
+
+	/**
+	 * Where the user reviews & submits the draft, and the public landing lives
+	 * — the institutional Figshare portal (e.g. https://data.dtu.dk), which is
+	 * distinct from both the authorize base (figshare.com) and the API base
+	 * (api.figshare.com). Falls back to the authorize base when unset.
+	 */
+	private function portalBase(): string {
+		$p = rtrim($this->cfg('portalUrl', ''), '/');
+		return $p !== '' ? $p : $this->authBase();
 	}
 
 	public function getMetadataSchema(): array {
@@ -55,6 +82,10 @@ class FigshareTarget extends AbstractHttpTarget {
 	}
 
 	public function getAuthorizeUrl(string $state): string {
+		// A personal token means no interactive auth: signal "skip OAuth".
+		if ($this->personalToken() !== '') {
+			return '';
+		}
 		if (!$this->isConfigured()) {
 			return '';
 		}
@@ -133,7 +164,7 @@ class FigshareTarget extends AbstractHttpTarget {
 			$doi = (string)$dbody['doi'];
 		}
 
-		$landing = $this->authBase() . '/account/articles/' . $articleId;
+		$landing = $this->portalBase() . '/account/articles/' . $articleId;
 		return PublishResult::ok((string)$articleId, $landing, $doi);
 	}
 

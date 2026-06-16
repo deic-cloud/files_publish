@@ -48,6 +48,17 @@ interface PublishTarget {
 	public function getAuthorizeUrl(string $state): string;
 
 	/**
+	 * Non-interactive credentials, when the target can authenticate without an
+	 * OAuth round-trip (e.g. a personal API token). Returns ['access_token'=>…]
+	 * to feed straight into publish(), or [] when only OAuth is available.
+	 * When this returns a token, getAuthorizeUrl() should return '' so the flow
+	 * skips the authorize step.
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function getDirectAuth(): array;
+
+	/**
 	 * Publish $files (absolute local paths keyed by display name) with the
 	 * collected $metadata, using $auth (e.g. ['access_token'=>…]).
 	 * Returns PublishResult. May upload to an API or create native shares.

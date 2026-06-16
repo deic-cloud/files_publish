@@ -53,7 +53,7 @@ class OauthController extends Controller {
 		}
 		$this->publishService->storeToken($target, $token);
 		return new RedirectResponse(
-			$this->urlGenerator->linkToRoute('files_publish.publish.run', ['target' => $target, 'job' => $state])
+			$this->urlGenerator->linkToRoute('files_publish.publish.progress', ['target' => $target, 'job' => $state])
 		);
 	}
 
