@@ -39,7 +39,7 @@ class ZenodoTarget extends AbstractHttpTarget {
 			['key' => 'title',       'label' => $this->l->t('Title'),       'type' => 'text',     'required' => true],
 			['key' => 'description', 'label' => $this->l->t('Description'), 'type' => 'textarea', 'required' => true],
 			['key' => 'creators',    'label' => $this->l->t('Authors'),     'type' => 'authors',  'required' => true,
-				'hint' => $this->l->t('Prefilled from your profile and ORCID iD; edit as needed.')],
+				'hint' => $this->l->t('Prefilled from your profile and ORCID; edit as needed.')],
 			['key' => 'keywords',    'label' => $this->l->t('Keywords'),    'type' => 'text',     'required' => false,
 				'hint' => $this->l->t('Comma-separated.')],
 			['key' => 'upload_type', 'label' => $this->l->t('Type'),        'type' => 'select',   'required' => true,

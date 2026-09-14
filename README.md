@@ -3,7 +3,7 @@
 Publish a file or folder from Nextcloud to a **research data repository**,
 making it findable and giving it a **citable DOI**. A "Publish…" action in the
 Files app collects metadata (authors prefilled from the user's profile and
-connected ORCID iD), authorizes with the repository, uploads the data as a
+connected ORCID), authorizes with the repository, uploads the data as a
 **draft**, and hands the user the repository's review/submit page.
 
 **Author:** Frederik Orellana, Technical University of Denmark (fror@dtu.dk).
