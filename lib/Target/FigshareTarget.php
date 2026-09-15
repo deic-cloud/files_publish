@@ -119,7 +119,7 @@ class FigshareTarget extends AbstractHttpTarget {
 			'response_type' => 'code',
 			'scope'         => 'all',
 			'state'         => $state,
-			'redirect_uri'  => $this->configService->get('figshare', 'redirectUri'),
+			'redirect_uri'  => $this->configService->redirectUri('figshare'),
 		]);
 	}
 

@@ -175,7 +175,7 @@ class ZenodoTarget extends AbstractHttpTarget {
 			'response_type' => 'code',
 			'scope'         => 'deposit:write',
 			'state'         => $state,
-			'redirect_uri'  => $this->configService->get('zenodo', 'redirectUri'),
+			'redirect_uri'  => $this->configService->redirectUri('zenodo'),
 		]);
 	}
 

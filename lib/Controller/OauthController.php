@@ -64,7 +64,7 @@ class OauthController extends Controller {
 		} else {
 			$tokenUrl = rtrim($this->configService->get('zenodo', 'baseUrl', 'https://zenodo.org'), '/') . '/oauth/token';
 		}
-		$redirectUri = $this->configService->get($target, 'redirectUri');
+		$redirectUri = $this->configService->redirectUri($target);
 		try {
 			$response = $this->clientService->newClient()->post($tokenUrl, [
 				'body' => [

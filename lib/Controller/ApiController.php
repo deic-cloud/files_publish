@@ -151,11 +151,6 @@ class ApiController extends OCSController {
 		if ($target !== '' && $this->registry->get($target) === null) {
 			return new DataResponse(['error' => 'Unknown target'], 404);
 		}
-		if ($target !== '') {
-			// Persist the canonical redirect URI so adapters can include it in auth URLs.
-			$this->configService->set($target, 'redirectUri',
-				$this->urlGenerator->linkToRouteAbsolute('files_publish.oauth.callback', ['target' => $target]));
-		}
 		$this->configService->setMany($target, $values, ['clientSecret', 'personalToken']);
 		return new DataResponse(['msg' => 'Saved']);
 	}
