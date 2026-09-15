@@ -48,20 +48,25 @@ class ApiController extends OCSController {
 
 	/** Metadata schema + author prefill for a target's publish dialog. */
 	#[NoAdminRequired]
-	public function getSchema(string $target, int $fileid = 0): DataResponse {
+	public function getSchema(string $target, int $fileid = 0, array $fileids = []): DataResponse {
 		$t = $this->registry->get($target);
 		if ($t === null || !$t->isConfigured()) {
 			return new DataResponse(['error' => 'Unknown target'], 404);
 		}
 		$uid = $this->userSession->getUser()?->getUID() ?? '';
+		$ids = $fileids ?: ($fileid > 0 ? [$fileid] : []);
 		return new DataResponse([
 			'schema'   => $t->getMetadataSchema(),
 			'creators' => $this->publishService->defaultCreators($uid),
 			'audience' => $t->getAudienceModel(),
-			// Values recorded on the item by an earlier deposit (its schema tag),
-			// keyed by form field; '_record_id', '_doi', '_url', '_date' carry the
-			// repository's answer. Empty for a never-published item.
-			'values'   => $this->metadataRecorder->prefill($fileid, $t),
+			// Form values: suggestions from the selection (e.g. Type from the file
+			// extension), overridden by what an earlier deposit recorded on the
+			// first item (its schema tag); '_record_id', '_url', '_date', '_uploaded'
+			// carry the repository's answer. Only suggestions for a never-published item.
+			'values'   => array_merge(
+				$uid !== '' && $ids ? $t->defaultsFor($this->publishService->fileNames($uid, $ids)) : [],
+				$this->metadataRecorder->prefill($fileid, $t),
+			),
 		]);
 	}
 
@@ -128,6 +133,9 @@ class ApiController extends OCSController {
 				'clientAppID' => $this->configService->get($id, 'clientAppID'),
 				'redirectUri' => $this->urlGenerator->linkToRouteAbsolute('files_publish.oauth.callback', ['target' => $id]),
 			];
+			if ($id === 'zenodo') {
+				$cfg[$id]['communities'] = $this->configService->get($id, 'communities');
+			}
 			if ($id === 'figshare') {
 				$cfg[$id]['authBaseUrl']     = $this->configService->get($id, 'authBaseUrl');
 				$cfg[$id]['portalUrl']       = $this->configService->get($id, 'portalUrl');

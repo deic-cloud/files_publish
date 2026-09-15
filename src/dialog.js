@@ -16,6 +16,7 @@ function el(tag, attrs, children) {
 
 function field(f, value) {
 	const wrap = el('div', { class: 'fp-field' })
+	if (f.when) wrap.dataset.when = JSON.stringify(f.when)
 	wrap.appendChild(el('label', { text: f.label + (f.required ? ' *' : '') }))
 	let input
 	if (f.type === 'textarea') {
@@ -93,8 +94,8 @@ export function openDialog(targets, fileids, api) {
 	})
 	box.appendChild(picker)
 
-	// "Already deposited" note: filled from the item's schema tag (meta_data)
-	// when a previous deposit recorded id/DOI/URL on it.
+	// Existing-deposit note: filled from the item's schema tag (meta_data)
+	// when a previous deposit recorded the deposit id on it.
 	const priorNote = el('div', { class: 'fp-prior' })
 	priorNote.style.display = 'none'
 	box.appendChild(priorNote)
@@ -126,6 +127,7 @@ export function openDialog(targets, fileids, api) {
 	footer.querySelector('.fp-cancel').addEventListener('click', close)
 
 	let current = null
+	let existingDeposit = ''
 	const msg = footer.querySelector('.fp-msg')
 
 	async function loadSchema(targetId) {
@@ -136,9 +138,12 @@ export function openDialog(targets, fileids, api) {
 		const saved = {}
 		formArea.querySelectorAll('[data-key]').forEach((inp) => { saved[inp.dataset.key] = inp.value })
 		msg.textContent = t('files_publish', 'Loading…')
-		// The first selected item's recorded metadata (its schema tag) prefills the form.
-		const fileidParam = fileids.length ? '?fileid=' + encodeURIComponent(fileids[0]) : ''
-		const data = await api.ocsGet('/targets/' + encodeURIComponent(targetId) + '/schema' + fileidParam)
+		// The selection suggests values (e.g. Type from the extension); the first
+		// item's recorded metadata (its schema tag) prefills and takes precedence.
+		const q = new URLSearchParams()
+		if (fileids.length) q.append('fileid', fileids[0])
+		fileids.forEach((id) => q.append('fileids[]', id))
+		const data = await api.ocsGet('/targets/' + encodeURIComponent(targetId) + '/schema' + (fileids.length ? '?' + q.toString() : ''))
 		msg.textContent = ''
 		formArea.innerHTML = ''
 		if (data?.ocs?.meta?.status !== 'ok') {
@@ -157,23 +162,41 @@ export function openDialog(targets, fileids, api) {
 			}
 			formArea.appendChild(field(f, val))
 		})
-		// Note about an earlier deposit of this item (recorded on its schema tag).
+		// Fields required only for a given Type (Zenodo's publication_type /
+		// image_type) show when that Type is selected.
+		formArea.addEventListener('change', applyConditions)
+		applyConditions()
+		// The item is already in a deposit (recorded on its schema tag): publish
+		// into that deposit again, as on the old service, rather than a new record.
+		existingDeposit = values._record_id || ''
 		priorNote.innerHTML = ''
-		if (values._doi || values._url || values._record_id) {
-			const parts = []
-			if (values._date) parts.push(t('files_publish', 'Already deposited on {date}.', { date: values._date }))
-			else parts.push(t('files_publish', 'Already deposited.'))
-			if (values._doi) parts.push('DOI ' + values._doi)
-			else if (values._record_id) parts.push(t('files_publish', 'Deposit {id}.', { id: values._record_id }))
-			priorNote.appendChild(el('span', { text: parts.join(' ') + ' ' }))
+		if (existingDeposit) {
+			const parts = [values._uploaded === 'yes'
+				? t('files_publish', 'This item was uploaded to deposit {id}', { id: existingDeposit })
+				: t('files_publish', 'This item is in deposit {id}', { id: existingDeposit })]
+			if (values._date) parts.push(t('files_publish', 'on {date}', { date: values._date }))
+			priorNote.appendChild(el('span', { text: parts.join(' ') + '. ' }))
 			if (values._url) {
-				priorNote.appendChild(el('a', { href: values._url, target: '_blank', rel: 'noopener', text: t('files_publish', 'Open the record') }))
+				priorNote.appendChild(el('a', { href: values._url, target: '_blank', rel: 'noopener', text: t('files_publish', 'Open the deposit') }))
+				priorNote.appendChild(el('span', { text: '. ' }))
 			}
-			priorNote.appendChild(el('span', { text: ' — ' + t('files_publish', 'publishing again creates a new record.') }))
+			priorNote.appendChild(el('span', { text: t('files_publish', 'Publishing adds the file(s) to that deposit — or to a new version of it, if it has already been published.') }))
 			priorNote.style.display = ''
 		} else {
 			priorNote.style.display = 'none'
 		}
+	}
+
+	function applyConditions() {
+		formArea.querySelectorAll('.fp-field[data-when]').forEach((wrap) => {
+			const cond = JSON.parse(wrap.dataset.when)
+			let show = true
+			for (const k in cond) {
+				const other = formArea.querySelector('[data-key="' + k + '"]')
+				if (!other || other.value !== cond[k]) show = false
+			}
+			wrap.style.display = show ? '' : 'none'
+		})
 	}
 	picker.addEventListener('change', (e) => loadSchema(e.target.value))
 	loadSchema(targets[0].id)
@@ -189,6 +212,7 @@ export function openDialog(targets, fileids, api) {
 		current.schema.forEach((f) => {
 			const inp = formArea.querySelector('[data-key="' + f.key + '"]')
 			if (!inp) return
+			if (inp.closest('.fp-field') && inp.closest('.fp-field').style.display === 'none') return
 			if (f.type === 'authors') {
 				metadata[f.key] = authorsFromString(inp.value, current.creators)
 				if (f.required && !metadata[f.key].length) missing = true
@@ -197,6 +221,7 @@ export function openDialog(targets, fileids, api) {
 				if (f.required && !inp.value.trim()) missing = true
 			}
 		})
+		if (existingDeposit) metadata.deposition_id = existingDeposit
 		return missing ? null : metadata
 	}
 

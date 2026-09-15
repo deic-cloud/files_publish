@@ -109,6 +109,19 @@ class PublishService {
 	}
 
 	/** Total size of the selection, for a rough upload-time estimate. */
+	/** [name => isFolder] for the user's selected items (unknown ids skipped). */
+	public function fileNames(string $uid, array $fileids): array {
+		$userFolder = $this->rootFolder->getUserFolder($uid);
+		$out = [];
+		foreach ($fileids as $id) {
+			$found = $userFolder->getById((int)$id);
+			if ($found) {
+				$out[$found[0]->getName()] = $found[0] instanceof Folder;
+			}
+		}
+		return $out;
+	}
+
 	public function estimateBytes(string $uid, array $fileids): int {
 		$userFolder = $this->rootFolder->getUserFolder($uid);
 		$total = 0;

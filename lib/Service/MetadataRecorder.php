@@ -13,9 +13,10 @@ use Psr\Log\LoggerInterface;
  * file or folder is deposited, the target's meta_data schema tag (e.g.
  * "Zenodo", "data.dtu.dk") is assigned to it and its fields are filled with
  * the metadata the user entered plus what the repository answered (record id,
- * DOI, landing page). Opening "Publish…" on the same item later prefills the
- * form from those fields, and the values are searchable and travel with the
- * data like any other metadata. Nothing is written to oc_preferences.
+ * upload URL, landing page, whether this item's files were uploaded). Opening
+ * "Publish…" on the same item later prefills the form from those fields and
+ * publishes into the same deposit again; the values are searchable and travel
+ * with the data like any other metadata. Nothing is written to oc_preferences.
  *
  * Requires the meta_data app; without it publishing still works, just without
  * a record on the file. The schema is never modified here: the target's form
@@ -87,7 +88,10 @@ class MetadataRecorder {
 					$values[$schemaKey] = self::toStored($formKey, $metadata[$formKey]);
 				}
 			}
-			$answer = ['record_id' => $r->recordId, 'doi' => $r->doi, 'url' => $r->landingUrl, 'date' => date('Y-m-d')];
+			$answer = [
+				'record_id' => $r->recordId, 'doi' => $r->doi, 'url' => $r->landingUrl, 'bucket' => $r->bucket,
+				'uploaded' => $r->uploaded ? 'yes' : '', 'date' => date('Y-m-d'),
+			];
 			foreach (($map['result'] ?? []) as $resultKey => $schemaKey) {
 				if (($answer[$resultKey] ?? '') !== '') {
 					$values[$schemaKey] = (string)$answer[$resultKey];

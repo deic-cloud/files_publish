@@ -73,18 +73,41 @@ Base `/ocs/v2.php/apps/files_publish/api/v1` (`OCS-APIREQUEST: true`).
 
 After a successful deposit every published item is tagged with the target's
 schema — **`Zenodo`**, or **`data.dtu.dk`** for Figshare — and the schema's
-fields are filled with what the user entered (title, description, creators as
-JSON, type; keywords for Figshare) plus, for Zenodo, the repository's answer
-(`deposition_id`, `url`, `publication_date`). Opening *Publish…* on the item
-again prefills the form from those fields and shows "Already deposited on … —
-publishing again creates a new record".
+fields are filled with what the user entered plus the repository's answer.
+For Zenodo that is the old service's bookkeeping, with the same meanings:
+
+| field | meaning |
+|---|---|
+| `deposition_id` | the Zenodo deposit this item belongs to |
+| `bucket` | the deposit's upload URL (files are added there) |
+| `url` | the deposit's page at Zenodo |
+| `uploaded` | `yes` once this item's data was uploaded into the deposit (unset for a link deposit) |
+| `publication_date` | date of the deposit |
+
+Opening *Publish…* on such an item prefills the form from the recorded values
+and **publishes into the same deposit again**: files are added, the metadata
+updated; if the deposit has already been published at Zenodo, a new version of
+it is created (`actions/newversion`) rather than an unrelated record. If the
+deposit is gone at Zenodo, a new one is created.
 
 The schema is the design authority: each target's form and its key map
 (`PublishTarget::getMetadataTag/getMetadataKeyMap`) are written to match the
-deployment's schema, and `Service/MetadataRecorder` never creates tags or
-fields — a value with no matching field is skipped and logged. The seeded
-`data.dtu.dk` schema has no fields for the repository's answer, so Figshare
-deposits record only the entered metadata until such fields are added to it.
+deployment's schema (Zenodo's required + conditionally required attributes,
+`communities`, `keywords`, and the bookkeeping above), and
+`Service/MetadataRecorder` never creates tags or fields — a value with no
+matching field is skipped and logged. Changing what is stored means changing
+the seeded schema in meta_data (`predefined_schemas.php` + the tags on the
+nodes) and the form together. The seeded `data.dtu.dk` schema has no fields
+for the repository's answer, so Figshare deposits record only the entered
+metadata until such fields are added to it.
+
+The Zenodo form: Title, Description, Authors, Type (suggested from the file
+extension — `PublishTarget::defaultsFor()`), Publication type / Image type
+(shown only for those Types, as Zenodo requires them then) and Keywords. Access
+right and license are left to Zenodo's defaults (open, CC0 / CC-BY) and remain
+editable in the metadata editor. The admin setting **Default communities**
+submits every deposit to the given Zenodo communities (the community's
+curators accept or reject), as the old service did.
 No per-user preferences are written (the earlier `state_<fileid>` rows are gone).
 
 ## Dependencies

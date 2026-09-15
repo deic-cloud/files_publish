@@ -34,6 +34,10 @@ abstract class AbstractHttpTarget implements PublishTarget {
 		return [];
 	}
 
+	public function defaultsFor(array $filenames): array {
+		return [];
+	}
+
 	/** Per-target default cap (GB) when the admin hasn't set one; 0 = none. */
 	protected function defaultMaxGB(): float {
 		return 0;

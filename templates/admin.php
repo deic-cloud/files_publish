@@ -65,6 +65,14 @@
 			       placeholder="<?php p($l->t('default %s', [$t['maxDefaultGB']])); ?>" />
 		</div>
 		<p class="fp-hint"><?php p($l->t('Uploads larger than this are blocked before they start (the user is steered to keep the data on ScienceData and publish a record linking to a share). This also bounds the synchronous upload — lower it if large uploads time out behind your proxy. Blank uses the default shown.')); ?></p>
+		<?php if ($t['id'] === 'zenodo'): ?>
+		<div class="fp-row">
+			<label for="fp-zenodo-communities"><?php p($l->t('Default communities')); ?></label>
+			<input type="text" id="fp-zenodo-communities" data-key="communities" value="<?php p($t['extra']['communities'] ?? ''); ?>"
+			       placeholder="<?php p($l->t('e.g. sciencedata, dtu')); ?>" />
+		</div>
+		<p class="fp-hint"><?php p($l->t('Zenodo community identifiers (comma-separated) every deposit is submitted to — e.g. a national or institutional community curated by data stewards. The community\'s curators accept or reject each record. Blank: none.')); ?></p>
+		<?php endif; ?>
 		<?php if ($t['id'] === 'figshare'): ?>
 		<div class="fp-row">
 			<label for="fp-figshare-defaultCategory"><?php p($l->t('Default category ID')); ?></label>

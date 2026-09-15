@@ -60,6 +60,12 @@ interface PublishTarget {
 	public function getMetadataKeyMap(): array;
 
 	/**
+	 * Form values suggested from what is selected, e.g. Type guessed from the
+	 * file extension. $filenames = [name => isFolder]. Recorded values win.
+	 */
+	public function defaultsFor(array $filenames): array;
+
+	/**
 	 * Build the OAuth authorize URL to send the user to, or '' when the
 	 * target needs no interactive auth (personal token / native share).
 	 * $state round-trips the pending publish (file ids + stored metadata key).

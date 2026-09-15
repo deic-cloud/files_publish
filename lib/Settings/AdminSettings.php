@@ -36,12 +36,14 @@ class AdminSettings implements ISettings {
 				'clientAppID'  => $this->configService->get($id, 'clientAppID'),
 				'maxPublishGB' => $this->configService->get($id, 'maxPublishGB'),
 				'maxDefaultGB' => (string)(int)round($t->maxUploadBytes() / (1024 * 1024 * 1024)),
-				'extra'       => $id === 'figshare'
+				'extra'       => $id === 'zenodo'
+					? ['communities' => $this->configService->get($id, 'communities')]
+					: ($id === 'figshare'
 					? [
 						'defaultCategory'  => $this->configService->get($id, 'defaultCategory'),
 						'defaultLicense'   => $this->configService->get($id, 'defaultLicense'),
 						'hasPersonalToken' => $this->configService->get($id, 'personalToken') !== '',
-					] : [],
+					] : []),
 				'redirectUri' => $this->urlGenerator->linkToRouteAbsolute('files_publish.oauth.callback', ['target' => $id]),
 			];
 		}
