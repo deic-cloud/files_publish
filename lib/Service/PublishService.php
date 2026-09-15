@@ -219,21 +219,4 @@ class PublishService {
 		return [['name' => $name, 'affiliation' => $affiliation, 'orcid' => $orcid]];
 	}
 
-	// ── Result recorded on the file (for re-publish / citation) ────────────────
-
-	public function recordResult(string $uid, int $fileid, string $target, PublishResult $r): void {
-		$payload = json_encode([
-			'target'     => $target,
-			'recordId'   => $r->recordId,
-			'doi'        => $r->doi,
-			'landingUrl' => $r->landingUrl,
-			'at'         => date('c'),
-		]);
-		$this->config->setUserValue($uid, 'files_publish', 'state_' . $fileid, $payload);
-	}
-
-	public function getResult(string $uid, int $fileid): ?array {
-		$raw = $this->config->getUserValue($uid, 'files_publish', 'state_' . $fileid, '');
-		return $raw === '' ? null : json_decode($raw, true);
-	}
 }

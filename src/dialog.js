@@ -93,6 +93,12 @@ export function openDialog(targets, fileids, api) {
 	})
 	box.appendChild(picker)
 
+	// "Already deposited" note: filled from the item's schema tag (meta_data)
+	// when a previous deposit recorded id/DOI/URL on it.
+	const priorNote = el('div', { class: 'fp-prior' })
+	priorNote.style.display = 'none'
+	box.appendChild(priorNote)
+
 	const formArea = el('div', { class: 'fp-form' })
 	box.appendChild(formArea)
 
@@ -130,19 +136,43 @@ export function openDialog(targets, fileids, api) {
 		const saved = {}
 		formArea.querySelectorAll('[data-key]').forEach((inp) => { saved[inp.dataset.key] = inp.value })
 		msg.textContent = t('files_publish', 'Loading…')
-		const data = await api.ocsGet('/targets/' + encodeURIComponent(targetId) + '/schema')
+		// The first selected item's recorded metadata (its schema tag) prefills the form.
+		const fileidParam = fileids.length ? '?fileid=' + encodeURIComponent(fileids[0]) : ''
+		const data = await api.ocsGet('/targets/' + encodeURIComponent(targetId) + '/schema' + fileidParam)
 		msg.textContent = ''
 		formArea.innerHTML = ''
 		if (data?.ocs?.meta?.status !== 'ok') {
 			formArea.appendChild(el('p', { text: t('files_publish', 'Could not load the form.') })); return
 		}
 		current = data.ocs.data
+		const values = current.values || {}
 		current.schema.forEach((f) => {
-			const val = (f.key in saved)
-				? saved[f.key]
-				: (f.type === 'authors' ? authorsToString(current.creators) : '')
+			let val
+			if (f.key in saved) {
+				val = saved[f.key]
+			} else if (values[f.key] !== undefined && values[f.key] !== '') {
+				val = f.type === 'authors' ? authorsToString(values[f.key]) : values[f.key]
+			} else {
+				val = f.type === 'authors' ? authorsToString(current.creators) : ''
+			}
 			formArea.appendChild(field(f, val))
 		})
+		// Note about an earlier deposit of this item (recorded on its schema tag).
+		priorNote.innerHTML = ''
+		if (values._doi || values._url || values._record_id) {
+			const parts = []
+			if (values._date) parts.push(t('files_publish', 'Already deposited on {date}.', { date: values._date }))
+			else parts.push(t('files_publish', 'Already deposited.'))
+			if (values._doi) parts.push('DOI ' + values._doi)
+			priorNote.appendChild(el('span', { text: parts.join(' ') + ' ' }))
+			if (values._url) {
+				priorNote.appendChild(el('a', { href: values._url, target: '_blank', rel: 'noopener', text: t('files_publish', 'Open the record') }))
+			}
+			priorNote.appendChild(el('span', { text: ' — ' + t('files_publish', 'publishing again creates a new record.') }))
+			priorNote.style.display = ''
+		} else {
+			priorNote.style.display = 'none'
+		}
 	}
 	picker.addEventListener('change', (e) => loadSchema(e.target.value))
 	loadSchema(targets[0].id)

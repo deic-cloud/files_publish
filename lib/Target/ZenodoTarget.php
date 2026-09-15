@@ -17,6 +17,18 @@ class ZenodoTarget extends AbstractHttpTarget {
 		return 'zenodo';
 	}
 
+	public function getMetadataTag(): string {
+		return 'Zenodo';
+	}
+
+	/** Seeded Zenodo schema keys (title, description, creators, upload_type, publication_date, deposition_id, url, …) + keywords/doi. */
+	public function getMetadataKeyMap(): array {
+		return [
+			'form'   => ['title' => 'title', 'description' => 'description', 'creators' => 'creators', 'keywords' => 'keywords', 'upload_type' => 'upload_type'],
+			'result' => ['record_id' => 'deposition_id', 'doi' => 'doi', 'url' => 'url', 'date' => 'publication_date'],
+		];
+	}
+
 	public function getLabel(): string {
 		return $this->l->t('Zenodo');
 	}

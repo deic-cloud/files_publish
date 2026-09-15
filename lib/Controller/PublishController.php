@@ -31,6 +31,7 @@ class PublishController extends Controller {
 		IRequest                $request,
 		private TargetRegistry  $registry,
 		private PublishService  $publishService,
+		private \OCA\FilesPublish\Service\MetadataRecorder $metadataRecorder,
 		private IUserSession    $userSession,
 		private IURLGenerator   $urlGenerator,
 		private ISession        $session,
@@ -85,9 +86,7 @@ class PublishController extends Controller {
 			if (!$res->success) {
 				return new DataResponse(['ok' => false, 'message' => $res->message ?: 'Publishing failed.']);
 			}
-			foreach ($jobData['fileids'] as $fileid) {
-				$this->publishService->recordResult($uid, (int)$fileid, $target, $res);
-			}
+			$this->metadataRecorder->record($jobData['fileids'], $t, $jobData['metadata'] ?? [], $res);
 			return new DataResponse(['ok' => true, 'doi' => $res->doi, 'landingUrl' => $res->landingUrl, 'targetLabel' => $t->getLabel()]);
 		}
 
@@ -110,9 +109,7 @@ class PublishController extends Controller {
 		if (!$res->success) {
 			return new DataResponse(['ok' => false, 'message' => $res->message ?: 'Publishing failed.']);
 		}
-		foreach ($jobData['fileids'] as $fileid) {
-			$this->publishService->recordResult($uid, (int)$fileid, $target, $res);
-		}
+		$this->metadataRecorder->record($jobData['fileids'], $t, $jobData['metadata'] ?? [], $res);
 		return new DataResponse([
 			'ok'          => true,
 			'doi'         => $res->doi,

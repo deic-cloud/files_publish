@@ -21,6 +21,7 @@ class ApiController extends OCSController {
 		IRequest               $request,
 		private TargetRegistry $registry,
 		private PublishService $publishService,
+		private \OCA\FilesPublish\Service\MetadataRecorder $metadataRecorder,
 		private ConfigService  $configService,
 		private IUserSession   $userSession,
 		private IURLGenerator  $urlGenerator,
@@ -47,7 +48,7 @@ class ApiController extends OCSController {
 
 	/** Metadata schema + author prefill for a target's publish dialog. */
 	#[NoAdminRequired]
-	public function getSchema(string $target): DataResponse {
+	public function getSchema(string $target, int $fileid = 0): DataResponse {
 		$t = $this->registry->get($target);
 		if ($t === null || !$t->isConfigured()) {
 			return new DataResponse(['error' => 'Unknown target'], 404);
@@ -57,6 +58,10 @@ class ApiController extends OCSController {
 			'schema'   => $t->getMetadataSchema(),
 			'creators' => $this->publishService->defaultCreators($uid),
 			'audience' => $t->getAudienceModel(),
+			// Values recorded on the item by an earlier deposit (its schema tag),
+			// keyed by form field; '_record_id', '_doi', '_url', '_date' carry the
+			// repository's answer. Empty for a never-published item.
+			'values'   => $this->metadataRecorder->prefill($fileid, $t),
 		]);
 	}
 

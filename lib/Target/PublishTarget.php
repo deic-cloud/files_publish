@@ -48,6 +48,18 @@ interface PublishTarget {
 	public function getMetadataSchema(): array;
 
 	/**
+	 * Name of the meta_data schema (tag) that records a deposit on the published
+	 * item — e.g. "Zenodo", "data.dtu.dk". '' = do not record.
+	 */
+	public function getMetadataTag(): string;
+
+	/**
+	 * How form fields and the repository's answer map onto that schema's fields:
+	 * ['form' => [formKey => schemaKey, …], 'result' => [record_id|doi|url|date => schemaKey, …]].
+	 */
+	public function getMetadataKeyMap(): array;
+
+	/**
 	 * Build the OAuth authorize URL to send the user to, or '' when the
 	 * target needs no interactive auth (personal token / native share).
 	 * $state round-trips the pending publish (file ids + stored metadata key).

@@ -23,6 +23,18 @@ class FigshareTarget extends AbstractHttpTarget {
 		return 'figshare';
 	}
 
+	public function getMetadataTag(): string {
+		return 'data.dtu.dk';
+	}
+
+	/** The deployment's data.dtu.dk schema (title, description, authors, defined_type, keywords, license, …) + article_id/doi/url. */
+	public function getMetadataKeyMap(): array {
+		return [
+			'form'   => ['title' => 'title', 'description' => 'description', 'creators' => 'authors', 'keywords' => 'keywords', 'defined_type' => 'defined_type'],
+			'result' => ['record_id' => 'article_id', 'doi' => 'doi', 'url' => 'url', 'date' => 'published'],
+		];
+	}
+
 	public function getLabel(): string {
 		return $this->l->t('Figshare');
 	}

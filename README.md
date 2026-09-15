@@ -69,11 +69,22 @@ Base `/ocs/v2.php/apps/files_publish/api/v1` (`OCS-APIREQUEST: true`).
 | POST | `/publish` | Begin: `target`, `fileids[]`, `metadata[...]` → next step (oauth url) |
 | GET/POST | `/config` | Admin: per-target credentials |
 
+## The publication record = the repository schema (meta_data)
+
+After a successful deposit every published item is tagged with the target's
+schema — **`Zenodo`**, or **`data.dtu.dk`** for Figshare — and the schema's
+fields are filled with what the user entered (title, description, creators as
+JSON, keywords, type) plus the repository's answer (`deposition_id`/`article_id`,
+`doi`, `url`, date). Opening *Publish…* on the item again prefills the form
+from those fields and shows "Already deposited on … DOI … — publishing again
+creates a new record". Fields missing from the schema are created server-side
+(`Service/MetadataRecorder`, `PublishTarget::getMetadataTag/getMetadataKeyMap`).
+No per-user preferences are written (the earlier `state_<fileid>` rows are gone).
+
 ## Dependencies
 
-- **meta_data** — present in the stack; this app currently records publish
-  state in per-user config (deposition id/DOI/URL), to migrate onto meta_data
-  tags for richer re-publish/versioning later.
+- **meta_data** — required for the publication record above; without it a
+  deposit still works, just leaves no record on the item.
 - **user_orcid** (optional) — author ORCID prefill, guarded with
   `class_exists(\OCA\UserOrcid\Lib::class)`.
 - The **file action** is a small webpack bundle (`src/files-action.js` →
@@ -88,5 +99,5 @@ Base `/ocs/v2.php/apps/files_publish/api/v1` (`OCS-APIREQUEST: true`).
 
 - Upload progress reporting (v1 runs the upload in one request; large uploads
   rely on the PHP-FPM timeout).
-- meta_data-backed state + re-publish/version-update of an existing deposit.
+- Version-update of an existing deposit (today a second publish creates a new record).
 - Dataverse, media and ScienceNotebooks adapters (design accommodates them).

@@ -32,3 +32,6 @@
 .fp-field label { cursor: default; }
 .fp-field input[type="text"], .fp-field textarea { cursor: text; }
 .fp-field select { cursor: pointer; }
+/* "Already deposited …" note above the form (recorded on the item's schema tag) */
+.fp-prior { margin: 0 0 10px; padding: 8px 10px; border-radius: 6px; background: var(--color-background-hover, #f4f4f4); color: var(--color-text-maxcontrast, #555); font-size: 13px; }
+.fp-prior a { text-decoration: underline; }
