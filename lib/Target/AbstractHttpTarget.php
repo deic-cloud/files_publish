@@ -14,6 +14,8 @@ use Psr\Log\LoggerInterface;
  * target-specific create/upload/DOI steps.
  */
 abstract class AbstractHttpTarget implements PublishTarget {
+	public const USER_AGENT = 'Nextcloud-files_publish/1.3 (+https://github.com/deic-cloud/files_publish)';
+
 	public function __construct(
 		protected ConfigService   $configService,
 		protected IL10N           $l,
@@ -68,6 +70,10 @@ abstract class AbstractHttpTarget implements PublishTarget {
 		$ch = curl_init($url);
 		curl_setopt_array($ch, [
 			CURLOPT_CUSTOMREQUEST  => $method,
+			// PHP curl sends NO User-Agent unless told to, and Zenodo's edge
+			// firewall answers such requests with an HTML 403 "unusual traffic
+			// from your network" (seen 2026-09-15). Identify the client properly.
+			CURLOPT_USERAGENT      => self::USER_AGENT,
 			CURLOPT_RETURNTRANSFER => true,
 			CURLOPT_FOLLOWLOCATION => true,
 			CURLOPT_TIMEOUT        => $opts['timeout'] ?? 60,
