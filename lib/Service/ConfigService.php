@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OCA\FilesPublish\Service;
 
 use OCP\IConfig;
+use OCP\IURLGenerator;
 
 /**
  * Per-target admin configuration (credentials, endpoints), kept in appconfig
@@ -14,7 +15,18 @@ use OCP\IConfig;
 class ConfigService {
 	public function __construct(
 		private IConfig $config,
+		private IURLGenerator $urlGenerator,
 	) {
+	}
+
+	/**
+	 * The OAuth redirect URI for a target on THIS node — computed, never stored:
+	 * it must match what the admin registered at the repository, and a stored
+	 * copy was only written when the admin form was saved (a node configured
+	 * from the command line sent an empty redirect_uri → "Invalid redirect URI").
+	 */
+	public function redirectUri(string $target): string {
+		return $this->urlGenerator->linkToRouteAbsolute('files_publish.oauth.callback', ['target' => $target]);
 	}
 
 	private function ckey(string $target, string $key): string {
