@@ -18,8 +18,9 @@ use Psr\Log\LoggerInterface;
  * data like any other metadata. Nothing is written to oc_preferences.
  *
  * Requires the meta_data app; without it publishing still works, just without
- * a record on the file. Schema fields that are missing are created (the seeded
- * schemas are admin-owned; this runs server-side, outside the ownership gate).
+ * a record on the file. The schema is never modified here: the target's form
+ * and key map are designed to match the deployment's schema, and a value whose
+ * field does not exist is skipped (and logged) rather than the field created.
  */
 class MetadataRecorder {
 	public function __construct(
@@ -39,7 +40,7 @@ class MetadataRecorder {
 		}
 	}
 
-	/** Tag id of the target's schema, created if it does not exist yet; null without meta_data. */
+	/** Tag id of the target's schema; null when the deployment has no such schema (nothing is created). */
 	private function tagId(object $tags, PublishTarget $t): ?int {
 		$name = $t->getMetadataTag();
 		if ($name === '') {
@@ -47,19 +48,10 @@ class MetadataRecorder {
 		}
 		$id = $tags->getTagIdByName($name);
 		if ($id === null) {
-			$created = $tags->newTag($name);
-			$id = $created['id'] ?? null;
+			$this->logger->info('files_publish: no "' . $name . '" schema on this node; the deposit is not recorded on the item(s).');
+			return null;
 		}
-		return $id === null ? null : (int)$id;
-	}
-
-	private function keyId(object $tags, int $tagId, string $keyName): ?int {
-		$id = $tags->getKeyIdByName($tagId, $keyName);
-		if ($id === null) {
-			$created = $tags->newKey($tagId, $keyName);
-			$id = $created['id'] ?? null;
-		}
-		return $id === null ? null : (int)$id;
+		return (int)$id;
 	}
 
 	/** @param mixed $v form value (string, or creators array) → stored string */
@@ -103,10 +95,12 @@ class MetadataRecorder {
 			}
 			$keyIds = [];
 			foreach ($values as $schemaKey => $_) {
-				$kid = $this->keyId($tags, $tagId, $schemaKey);
-				if ($kid !== null) {
-					$keyIds[$schemaKey] = $kid;
+				$kid = $tags->getKeyIdByName($tagId, $schemaKey);
+				if ($kid === null) {
+					$this->logger->warning('files_publish: schema "' . $t->getMetadataTag() . '" has no field "' . $schemaKey . '"; value not recorded.');
+					continue;
 				}
+				$keyIds[$schemaKey] = (int)$kid;
 			}
 			foreach ($fileids as $fileid) {
 				$fileid = (int)$fileid;

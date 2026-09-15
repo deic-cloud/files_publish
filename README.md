@@ -74,11 +74,17 @@ Base `/ocs/v2.php/apps/files_publish/api/v1` (`OCS-APIREQUEST: true`).
 After a successful deposit every published item is tagged with the target's
 schema — **`Zenodo`**, or **`data.dtu.dk`** for Figshare — and the schema's
 fields are filled with what the user entered (title, description, creators as
-JSON, keywords, type) plus the repository's answer (`deposition_id`/`article_id`,
-`doi`, `url`, date). Opening *Publish…* on the item again prefills the form
-from those fields and shows "Already deposited on … DOI … — publishing again
-creates a new record". Fields missing from the schema are created server-side
-(`Service/MetadataRecorder`, `PublishTarget::getMetadataTag/getMetadataKeyMap`).
+JSON, type; keywords for Figshare) plus, for Zenodo, the repository's answer
+(`deposition_id`, `url`, `publication_date`). Opening *Publish…* on the item
+again prefills the form from those fields and shows "Already deposited on … —
+publishing again creates a new record".
+
+The schema is the design authority: each target's form and its key map
+(`PublishTarget::getMetadataTag/getMetadataKeyMap`) are written to match the
+deployment's schema, and `Service/MetadataRecorder` never creates tags or
+fields — a value with no matching field is skipped and logged. The seeded
+`data.dtu.dk` schema has no fields for the repository's answer, so Figshare
+deposits record only the entered metadata until such fields are added to it.
 No per-user preferences are written (the earlier `state_<fileid>` rows are gone).
 
 ## Dependencies

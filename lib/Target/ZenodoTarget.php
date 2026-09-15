@@ -21,11 +21,17 @@ class ZenodoTarget extends AbstractHttpTarget {
 		return 'Zenodo';
 	}
 
-	/** Seeded Zenodo schema keys (title, description, creators, upload_type, publication_date, deposition_id, url, …) + keywords/doi. */
+	/**
+	 * Maps form keys / deposit results onto the seeded meta_data "Zenodo" schema
+	 * (title, description, creators, upload_type, publication_type, image_type,
+	 * publication_date, access_right, access_conditions, embargo_date, license,
+	 * communities, deposition_id, uploaded, bucket, url). Only fields that exist
+	 * there are mapped; the form below is designed to match it.
+	 */
 	public function getMetadataKeyMap(): array {
 		return [
-			'form'   => ['title' => 'title', 'description' => 'description', 'creators' => 'creators', 'keywords' => 'keywords', 'upload_type' => 'upload_type'],
-			'result' => ['record_id' => 'deposition_id', 'doi' => 'doi', 'url' => 'url', 'date' => 'publication_date'],
+			'form'   => ['title' => 'title', 'description' => 'description', 'creators' => 'creators', 'upload_type' => 'upload_type'],
+			'result' => ['record_id' => 'deposition_id', 'url' => 'url', 'date' => 'publication_date'],
 		];
 	}
 
@@ -52,8 +58,6 @@ class ZenodoTarget extends AbstractHttpTarget {
 			['key' => 'description', 'label' => $this->l->t('Description'), 'type' => 'textarea', 'required' => true],
 			['key' => 'creators',    'label' => $this->l->t('Authors'),     'type' => 'authors',  'required' => true,
 				'hint' => $this->l->t('Prefilled from your profile and ORCID; edit as needed.')],
-			['key' => 'keywords',    'label' => $this->l->t('Keywords'),    'type' => 'text',     'required' => false,
-				'hint' => $this->l->t('Comma-separated.')],
 			['key' => 'upload_type', 'label' => $this->l->t('Type'),        'type' => 'select',   'required' => true,
 				'default' => 'dataset',
 				'options' => [
@@ -99,9 +103,6 @@ class ZenodoTarget extends AbstractHttpTarget {
 			'upload_type' => $m['upload_type'] ?? 'dataset',
 			'creators'    => $creators ?: [['name' => $m['title'] ?? 'Unknown']],
 		];
-		if (!empty($m['keywords'])) {
-			$meta['keywords'] = array_values(array_filter(array_map('trim', explode(',', $m['keywords']))));
-		}
 		return $meta;
 	}
 

@@ -27,11 +27,18 @@ class FigshareTarget extends AbstractHttpTarget {
 		return 'data.dtu.dk';
 	}
 
-	/** The deployment's data.dtu.dk schema (title, description, authors, defined_type, keywords, license, …) + article_id/doi/url. */
+	/**
+	 * Maps onto the deployment's meta_data "data.dtu.dk" schema (title,
+	 * description, authors, defined_type, categories, keywords, license,
+	 * orcid_corresponding_depositor). That schema has no fields for the
+	 * repository's answer yet (article id, DOI, URL, date), so nothing is
+	 * recorded from the result until such fields are added to the schema
+	 * deliberately — the recorder never creates fields.
+	 */
 	public function getMetadataKeyMap(): array {
 		return [
 			'form'   => ['title' => 'title', 'description' => 'description', 'creators' => 'authors', 'keywords' => 'keywords', 'defined_type' => 'defined_type'],
-			'result' => ['record_id' => 'article_id', 'doi' => 'doi', 'url' => 'url', 'date' => 'published'],
+			'result' => [],
 		];
 	}
 

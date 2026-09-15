@@ -164,6 +164,7 @@ export function openDialog(targets, fileids, api) {
 			if (values._date) parts.push(t('files_publish', 'Already deposited on {date}.', { date: values._date }))
 			else parts.push(t('files_publish', 'Already deposited.'))
 			if (values._doi) parts.push('DOI ' + values._doi)
+			else if (values._record_id) parts.push(t('files_publish', 'Deposit {id}.', { id: values._record_id }))
 			priorNote.appendChild(el('span', { text: parts.join(' ') + ' ' }))
 			if (values._url) {
 				priorNote.appendChild(el('a', { href: values._url, target: '_blank', rel: 'noopener', text: t('files_publish', 'Open the record') }))
