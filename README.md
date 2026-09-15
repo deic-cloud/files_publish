@@ -71,9 +71,11 @@ Base `/ocs/v2.php/apps/files_publish/api/v1` (`OCS-APIREQUEST: true`).
 
 ## The publication record = the repository schema (meta_data)
 
-After a successful deposit every published item is tagged with the target's
-schema — **`Zenodo`**, or **`data.dtu.dk`** for Figshare — and the schema's
-fields are filled with what the user entered plus the repository's answer.
+Every item the user publishes is tagged with the target's schema —
+**`Zenodo`**, or **`data.dtu.dk`** for Figshare — and the schema's fields are
+filled with what the user entered, whether or not the deposit succeeds (a
+failed attempt costs nothing; the next *Publish…* is prefilled). On success
+the repository's answer is added.
 For Zenodo that is the old service's bookkeeping, with the same meanings:
 
 | field | meaning |

@@ -83,10 +83,12 @@ class PublishController extends Controller {
 				return new DataResponse(['ok' => false, 'message' => 'Could not create a public share link (link sharing may be disabled).']);
 			}
 			$res = $t->publishLink($jobData['metadata'], $urls, $auth);
+			// Recorded on the item(s) even when the deposit failed: the entered
+			// metadata is kept, only the repository's answer is missing.
+			$this->metadataRecorder->record($jobData['fileids'], $t, $jobData['metadata'] ?? [], $res);
 			if (!$res->success) {
 				return new DataResponse(['ok' => false, 'message' => $res->message ?: 'Publishing failed.']);
 			}
-			$this->metadataRecorder->record($jobData['fileids'], $t, $jobData['metadata'] ?? [], $res);
 			return new DataResponse(['ok' => true, 'doi' => $res->doi, 'landingUrl' => $res->landingUrl, 'targetLabel' => $t->getLabel()]);
 		}
 
@@ -106,10 +108,10 @@ class PublishController extends Controller {
 			}
 		}
 
+		$this->metadataRecorder->record($jobData['fileids'], $t, $jobData['metadata'] ?? [], $res);
 		if (!$res->success) {
 			return new DataResponse(['ok' => false, 'message' => $res->message ?: 'Publishing failed.']);
 		}
-		$this->metadataRecorder->record($jobData['fileids'], $t, $jobData['metadata'] ?? [], $res);
 		return new DataResponse([
 			'ok'          => true,
 			'doi'         => $res->doi,

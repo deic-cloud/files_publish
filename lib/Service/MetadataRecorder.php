@@ -66,8 +66,11 @@ class MetadataRecorder {
 	}
 
 	/**
-	 * After a successful deposit: tag every published item with the target's
-	 * schema and store the entered metadata + the repository's answer.
+	 * Tag every selected item with the target's schema and store the entered
+	 * metadata — whether or not the deposit succeeded, so a failed attempt
+	 * costs the user nothing (as on the old service, where the metadata lived
+	 * on the tag before the deposit). The repository's answer (deposit id, URL,
+	 * upload state, date) is stored only on success.
 	 *
 	 * @param int[] $fileids
 	 */
@@ -92,7 +95,7 @@ class MetadataRecorder {
 				'record_id' => $r->recordId, 'doi' => $r->doi, 'url' => $r->landingUrl, 'bucket' => $r->bucket,
 				'uploaded' => $r->uploaded ? 'yes' : '', 'date' => date('Y-m-d'),
 			];
-			foreach (($map['result'] ?? []) as $resultKey => $schemaKey) {
+			foreach ($r->success ? ($map['result'] ?? []) : [] as $resultKey => $schemaKey) {
 				if (($answer[$resultKey] ?? '') !== '') {
 					$values[$schemaKey] = (string)$answer[$resultKey];
 				}
