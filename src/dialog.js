@@ -3,7 +3,7 @@
 import { translate as t } from '@nextcloud/l10n'
 import { showSuccess, showError } from './toast'
 
-function el(tag, attrs, children) {
+export function el(tag, attrs, children) {
 	const e = document.createElement(tag)
 	for (const k in (attrs || {})) {
 		if (k === 'text') e.textContent = attrs[k]
@@ -14,7 +14,7 @@ function el(tag, attrs, children) {
 	return e
 }
 
-function field(f, value) {
+export function field(f, value) {
 	const wrap = el('div', { class: 'fp-field' })
 	if (f.when) wrap.dataset.when = JSON.stringify(f.when)
 	wrap.appendChild(el('label', { text: f.label + (f.required ? ' *' : '') }))
@@ -37,10 +37,10 @@ function field(f, value) {
 }
 
 const ORCID_RE = /^(.*?)\s*<(\d{4}-\d{4}-\d{4}-\d{3}[\dX])>\s*$/
-function authorsToString(creators) {
+export function authorsToString(creators) {
 	return (creators || []).map((c) => c.name + (c.orcid ? ' <' + c.orcid + '>' : '')).join('; ')
 }
-function authorsFromString(s, creators) {
+export function authorsFromString(s, creators) {
 	const names = (s || '').split(';').map((x) => x.trim()).filter(Boolean)
 	return names.map((n, i) => {
 		const m = n.match(ORCID_RE)

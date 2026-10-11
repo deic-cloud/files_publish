@@ -35,6 +35,10 @@ class ApiController extends OCSController {
 	public function listTargets(): DataResponse {
 		$out = [];
 		foreach ($this->registry->configured() as $t) {
+			// A DOI for data kept here has its own action ("Assign DOI…"), not a repository.
+			if ($t->getId() === \OCA\FilesPublish\Target\DataCiteTarget::ID) {
+				continue;
+			}
 			$out[] = [
 				'id'          => $t->getId(),
 				'label'       => $t->getLabel(),
@@ -151,7 +155,7 @@ class ApiController extends OCSController {
 		if ($target !== '' && $this->registry->get($target) === null) {
 			return new DataResponse(['error' => 'Unknown target'], 404);
 		}
-		$this->configService->setMany($target, $values, ['clientSecret', 'personalToken']);
+		$this->configService->setMany($target, $values, ['clientSecret', 'personalToken', 'password']);
 		return new DataResponse(['msg' => 'Saved']);
 	}
 }

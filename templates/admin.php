@@ -20,6 +20,38 @@
 			</span>
 		</legend>
 
+		<?php if ($t['id'] === 'datacite'): ?>
+		<p class="fp-hint"><?php p($l->t('Lets owners give a file or folder a DOI while the data stays here ("Assign DOI…" in Files). The DOI points at the item\'s page in the public catalogue, at <landing base>/doi/<suffix>; the web server must send that path to the catalogue. Requires the "DataCite" metadata schema and the catalogue (files_picocms).')); ?></p>
+		<div class="fp-row">
+			<label for="fp-datacite-apiUrl"><?php p($l->t('API URL')); ?></label>
+			<input type="text" id="fp-datacite-apiUrl" data-key="apiUrl" value="<?php p($t['extra']['apiUrl'] ?? ''); ?>"
+			       placeholder="https://api.test.datacite.org" />
+		</div>
+		<p class="fp-hint"><?php p($l->t('https://api.test.datacite.org for test DOIs, https://api.datacite.org for real ones.')); ?></p>
+		<div class="fp-row">
+			<label for="fp-datacite-repositoryId"><?php p($l->t('Repository ID')); ?></label>
+			<input type="text" id="fp-datacite-repositoryId" data-key="repositoryId" value="<?php p($t['extra']['repositoryId'] ?? ''); ?>" />
+		</div>
+		<div class="fp-row">
+			<label for="fp-datacite-password"><?php p($l->t('Password')); ?></label>
+			<input type="password" id="fp-datacite-password" data-key="password" value="" autocomplete="new-password"
+			       placeholder="<?php p(!empty($t['extra']['hasPassword']) ? $l->t('(set — unchanged if blank)') : ''); ?>" />
+		</div>
+		<div class="fp-row">
+			<label for="fp-datacite-prefix"><?php p($l->t('DOI prefix')); ?></label>
+			<input type="text" id="fp-datacite-prefix" data-key="prefix" value="<?php p($t['extra']['prefix'] ?? ''); ?>" placeholder="10.xxxxx" />
+		</div>
+		<div class="fp-row">
+			<label for="fp-datacite-publisher"><?php p($l->t('Publisher')); ?></label>
+			<input type="text" id="fp-datacite-publisher" data-key="publisher" value="<?php p($t['extra']['publisher'] ?? ''); ?>"
+			       placeholder="<?php p($t['extra']['publisherDefault'] ?? ''); ?>" />
+		</div>
+		<div class="fp-row">
+			<label for="fp-datacite-landingBase"><?php p($l->t('Landing base URL')); ?></label>
+			<input type="text" id="fp-datacite-landingBase" data-key="landingBase" value="<?php p($t['extra']['landingBase'] ?? ''); ?>"
+			       placeholder="<?php p($t['extra']['landingDefault'] ?? ''); ?>" />
+		</div>
+		<?php else: ?>
 		<div class="fp-row">
 			<label><?php p($l->t('Redirect URI to register')); ?></label>
 			<code><?php p($t['redirectUri']); ?></code>
@@ -65,6 +97,7 @@
 			       placeholder="<?php p($l->t('default %s', [$t['maxDefaultGB']])); ?>" />
 		</div>
 		<p class="fp-hint"><?php p($l->t('Uploads larger than this are blocked before they start (the user is steered to keep the data on ScienceData and publish a record linking to a share). This also bounds the synchronous upload — lower it if large uploads time out behind your proxy. Blank uses the default shown.')); ?></p>
+		<?php endif; ?>
 		<?php if ($t['id'] === 'zenodo'): ?>
 		<div class="fp-row">
 			<label for="fp-zenodo-communities"><?php p($l->t('Default communities')); ?></label>

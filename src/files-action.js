@@ -8,6 +8,9 @@ import { registerFileAction } from '@nextcloud/files'
 import { translate as t } from '@nextcloud/l10n'
 import { showError, showInfo } from './toast'
 import { openDialog } from './dialog'
+import { openDoiDialog } from './doi-dialog'
+import { loadState } from '@nextcloud/initial-state'
+import { getCurrentUser } from '@nextcloud/auth'
 
 const OCS = (window.OC?.webroot || '') + '/ocs/v2.php/apps/files_publish/api/v1'
 
@@ -65,3 +68,31 @@ registerFileAction({
 	execBatch: async ({ nodes }) => { await runPublish(nodes); return nodes.map(() => null) },
 	order: 25,
 })
+
+// "Assign DOI…" (DataCite) — offered only where an administrator configured it,
+// on a single item the user owns (the DOI's landing page lists the owner's data).
+const DOI_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'
+	+ '<path fill="currentColor" d="M5.5 7A1.5 1.5 0 0 1 4 5.5A1.5 1.5 0 0 1 5.5 4A1.5 1.5 0 0 1 7 5.5A1.5 1.5 0 0 1 5.5 7m15.91 4.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.11 0-2 .89-2 2v7c0 .55.22 1.05.59 1.41l8.99 9c.37.36.87.59 1.42.59s1.05-.23 1.41-.59l7-7c.37-.36.59-.86.59-1.41c0-.56-.23-1.06-.59-1.42Z"/></svg>'
+
+let doiEnabled = false
+try { doiEnabled = !!loadState('files_publish', 'doi', false) } catch (e) { /* not provided */ }
+
+if (doiEnabled) {
+	registerFileAction({
+		id: 'files-publish-doi',
+		displayName: () => t('files_publish', 'Assign DOI…'),
+		title: () => t('files_publish', 'Give this file or folder a citable DOI; the data stays here'),
+		iconSvgInline: () => DOI_ICON,
+		enabled: ({ nodes }) => Array.isArray(nodes) && nodes.length === 1 && !!nodes[0].fileid
+			&& (!nodes[0].owner || nodes[0].owner === getCurrentUser()?.uid),
+		exec: async ({ nodes }) => {
+			try {
+				openDoiDialog(nodes[0].fileid, { ocsGet, ocsPost })
+			} catch (e) {
+				showError(t('files_publish', 'Assign DOI failed') + ': ' + (e && e.message ? e.message : e))
+			}
+			return null
+		},
+		order: 26,
+	})
+}

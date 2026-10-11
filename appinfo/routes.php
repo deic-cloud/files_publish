@@ -10,6 +10,10 @@ return [
 		['name' => 'api#getSchema',    'url' => '/api/v1/targets/{target}/schema', 'verb' => 'GET'],
 		// Start publishing: validates, stores metadata, returns the auth/redirect step
 		['name' => 'api#begin',        'url' => '/api/v1/publish',          'verb' => 'POST'],
+		// "Assign DOI…" (DataCite): the item's DOI + form; register/update; make findable
+		['name' => 'doi#get',          'url' => '/api/v1/doi',              'verb' => 'GET'],
+		['name' => 'doi#assign',       'url' => '/api/v1/doi',              'verb' => 'POST'],
+		['name' => 'doi#findable',     'url' => '/api/v1/doi/findable',     'verb' => 'POST'],
 		// Admin: per-target credentials
 		['name' => 'api#getConfig',    'url' => '/api/v1/config',           'verb' => 'GET'],
 		['name' => 'api#setConfig',    'url' => '/api/v1/config',           'verb' => 'POST'],

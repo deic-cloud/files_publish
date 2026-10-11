@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OCA\FilesPublish\Service;
 
+use OCA\FilesPublish\Target\DataCiteTarget;
 use OCA\FilesPublish\Target\FigshareTarget;
 use OCA\FilesPublish\Target\PublishTarget;
 use OCA\FilesPublish\Target\ZenodoTarget;
@@ -32,6 +33,7 @@ class TargetRegistry {
 			foreach ([
 				new ZenodoTarget($this->configService, $this->l, $this->logger),
 				new FigshareTarget($this->configService, $this->l, $this->logger),
+				new DataCiteTarget($this->configService, $this->l, $this->logger),
 			] as $t) {
 				$this->targets[$t->getId()] = $t;
 			}

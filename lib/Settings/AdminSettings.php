@@ -43,7 +43,17 @@ class AdminSettings implements ISettings {
 						'defaultCategory'  => $this->configService->get($id, 'defaultCategory'),
 						'defaultLicense'   => $this->configService->get($id, 'defaultLicense'),
 						'hasPersonalToken' => $this->configService->get($id, 'personalToken') !== '',
-					] : []),
+					] : ($id === 'datacite'
+					? [
+						'apiUrl'           => $this->configService->get($id, 'apiUrl'),
+						'repositoryId'     => $this->configService->get($id, 'repositoryId'),
+						'hasPassword'      => $this->configService->get($id, 'password') !== '',
+						'prefix'           => $this->configService->get($id, 'prefix'),
+						'publisher'        => $this->configService->get($id, 'publisher'),
+						'publisherDefault' => \OCP\Server::get(\OCP\Defaults::class)->getName(),
+						'landingBase'      => $this->configService->get($id, 'landingBase'),
+						'landingDefault'   => rtrim((string)\OCP\Server::get(\OCP\IConfig::class)->getSystemValue('files_sharding_master_url', '') ?: $this->urlGenerator->getAbsoluteURL('/'), '/'),
+					] : [])),
 				'redirectUri' => $this->urlGenerator->linkToRouteAbsolute('files_publish.oauth.callback', ['target' => $id]),
 			];
 		}

@@ -81,6 +81,38 @@ class PublishService {
 		}
 	}
 
+	/**
+	 * The item's public READ link (reused or created) for a DOI landing page,
+	 * marked for the public catalogue (files_picocms:catalog_listed) when that
+	 * app is enabled — the landing page is a catalogue page.
+	 */
+	public function listedLink(string $uid, Node $node): ?IShare {
+		try {
+			$existing = $this->shareManager->getSharesBy($uid, IShare::TYPE_LINK, $node, false, 1);
+			$share = $existing[0] ?? null;
+			if ($share === null) {
+				$share = $this->shareManager->newShare();
+				$share->setNode($node);
+				$share->setShareType(IShare::TYPE_LINK);
+				$share->setPermissions(Constants::PERMISSION_READ);
+				$share->setSharedBy($uid);
+				$share = $this->shareManager->createShare($share);
+			}
+			if (\OCP\Server::get(\OCP\App\IAppManager::class)->isEnabledForAnyone('files_picocms')) {
+				$attrs = $share->getAttributes() ?? $share->newAttributes();
+				if (!$attrs->getAttribute('files_picocms', 'catalog_listed')) {
+					$attrs->setAttribute('files_picocms', 'catalog_listed', true);
+					$share->setAttributes($attrs);
+					$share = $this->shareManager->updateShare($share);
+				}
+			}
+			return $share;
+		} catch (\Throwable $e) {
+			$this->logger->error('files_publish: public link for DOI failed: ' . $e->getMessage());
+			return null;
+		}
+	}
+
 	// ── Pending job (survives the OAuth popup round-trip) ──────────────────────
 
 	/** @param array{target:string,fileids:int[],metadata:array} $job */

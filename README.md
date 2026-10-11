@@ -23,6 +23,7 @@ adapter in `TargetRegistry`.
 |--------|--------|-----------|
 | **Zenodo** (zenodo.org, sandbox, or a self-hosted Invenio) | built | OAuth2, deposition + bucket upload, DOI on submit |
 | **Figshare** (figshare.com, data.dtu.dk) | built | OAuth2, article + chunked (MD5) upload, `reserve_doi` |
+| **DOI here** (DataCite) | built | data stays; DataCite REST draft → findable; landing page in the catalogue |
 | Dataverse | planned | — |
 | Media / streaming platform | planned | upload adapter, config-swap URL; supports controlled-audience video |
 | ScienceNotebooks | planned (with user_pods) | native: public link + share with a group, no external API |
@@ -55,8 +56,43 @@ author affiliation can be set globally.
 App config keys (`oc_appconfig`, app `files_publish`), namespaced by target:
 `zenodo.baseUrl`, `zenodo.clientAppID`, `zenodo.clientSecret`,
 `figshare.baseUrl`, `figshare.authBaseUrl`, `figshare.clientAppID`,
-`figshare.clientSecret`, `figshare.defaultCategory`, `figshare.defaultLicense`;
-global `defaultAffiliation`.
+`figshare.clientSecret`, `figshare.defaultCategory`, `figshare.defaultLicense`,
+`datacite.*` (see Assign DOI); global `defaultAffiliation`. Secrets
+(`clientSecret`, `personalToken`, `password`) are stored as sensitive values
+(encrypted, masked by `occ`); `ConfigService` reads them through `IAppConfig`.
+
+## Assign DOI (DataCite) — a DOI for data that stays here
+
+**Files → "Assign DOI…"** (one item, owner only; offered when DataCite is
+configured) registers a DOI with DataCite for a file or folder that is *not*
+moved anywhere. It is not a repository deposit, so it is not in "Publish…".
+
+1. The form (title, authors, description, type, licence, keywords) is prefilled
+   from the item's name, other metadata on it and the user's ORCID.
+2. **Register draft DOI**: the item gets a read-only public link marked for the
+   public catalogue (`files_picocms:catalog_listed`); a draft DOI is registered
+   (DataCite picks the suffix) with URL `<landingBase>/doi/<suffix>`; the DOI,
+   URL and date are recorded in the item's **DataCite** schema (meta_data) —
+   that is how the catalogue finds the item again. The same button later
+   updates the DOI's metadata.
+3. **Make findable…** is a separate, warned step: a findable DOI can never be
+   deleted, and its landing page must stay available.
+
+`/doi/<suffix>` is a web-server redirect (mfsbsd `nc_htaccess_custom.conf`) to
+the catalogue site, `/sites/public/?doi=<suffix>`, where files_picocms shows the
+landing page — or, when the item has left the catalogue, a **withdrawn** page
+built from DataCite's public record (410).
+
+Requires: the meta_data **DataCite** schema (fields `title`, `creators`,
+`description`, `resource_type`, `license`, `keywords`, `doi`, `url`, `date`) —
+the action refuses to register without it, so no DOI is ever left unrecorded —
+and files_picocms for the landing page. DataCite only accepts a findable DOI
+whose URL is in the repository's registered domains (Fabrica settings).
+
+Config keys (`datacite.*`): `apiUrl` (`https://api.test.datacite.org` for test
+DOIs, `https://api.datacite.org` for real ones), `repositoryId`, `password`
+(stored as a sensitive app value), `prefix`, `publisher` (default: the theming
+name), `landingBase` (default: `files_sharding_master_url`, else this node).
 
 ## OCS API
 
@@ -67,6 +103,9 @@ Base `/ocs/v2.php/apps/files_publish/api/v1` (`OCS-APIREQUEST: true`).
 | GET | `/targets` | Configured targets for the file action |
 | GET | `/targets/{target}/schema` | Metadata schema + author prefill |
 | POST | `/publish` | Begin: `target`, `fileids[]`, `metadata[...]` → next step (oauth url) |
+| GET | `/doi?fileid=` | Assign DOI form, prefill, the item's DOI and its live DataCite state |
+| POST | `/doi` | Register a draft DOI (`fileid`, `metadata[...]`) or update the existing DOI's metadata |
+| POST | `/doi/findable` | Make the item's draft DOI findable (`fileid`) |
 | GET/POST | `/config` | Admin: per-target credentials |
 
 ## The publication record = the repository schema (meta_data)

@@ -55,6 +55,28 @@ class MetadataRecorder {
 		return (int)$id;
 	}
 
+	/** True when this node has the target's schema with all the given fields. */
+	public function hasSchema(PublishTarget $t, array $fields): bool {
+		$tags = $this->tags();
+		if ($tags === null) {
+			return false;
+		}
+		try {
+			$tagId = $tags->getTagIdByName($t->getMetadataTag());
+			if ($tagId === null) {
+				return false;
+			}
+			foreach ($fields as $f) {
+				if ($tags->getKeyIdByName((int)$tagId, $f) === null) {
+					return false;
+				}
+			}
+			return true;
+		} catch (\Throwable) {
+			return false;
+		}
+	}
+
 	/** @param mixed $v form value (string, or creators array) → stored string */
 	private static function toStored(string $formKey, mixed $v): string {
 		if (is_array($v)) {
@@ -121,6 +143,39 @@ class MetadataRecorder {
 		} catch (\Throwable $e) {
 			// The deposit itself succeeded; a missing record must not turn that into an error.
 			$this->logger->error('files_publish: recording metadata on the published item(s) failed: ' . $e->getMessage());
+		}
+	}
+
+	/**
+	 * Every metadata value on the item, across all its schemas: field name →
+	 * value (first non-empty wins). For suggesting form values from what the
+	 * owner already described elsewhere (e.g. a Zenodo or Dublin Core title).
+	 */
+	public function anyValues(int $fileid): array {
+		$tags = $this->tags();
+		if ($tags === null || $fileid <= 0) {
+			return [];
+		}
+		try {
+			$db = \OCP\Server::get(\OCP\IDBConnection::class);
+			$q = $db->getQueryBuilder();
+			$q->select('k.name', 'd.value')
+				->from('meta_data_docKeys', 'd')
+				->innerJoin('d', 'meta_data_keys', 'k', $q->expr()->eq('d.keyid', 'k.id'))
+				->where($q->expr()->eq('d.fileid', $q->createNamedParameter($fileid, \OCP\DB\QueryBuilder\IQueryBuilder::PARAM_INT)));
+			$r = $q->executeQuery();
+			$out = [];
+			while (($row = $r->fetch()) !== false) {
+				$name = strtolower((string)$row['name']);
+				if (!isset($out[$name]) && trim((string)$row['value']) !== '') {
+					$out[$name] = html_entity_decode((string)$row['value'], ENT_QUOTES | ENT_HTML5, 'UTF-8'); // stored encoded by meta_data
+				}
+			}
+			$r->closeCursor();
+			return $out;
+		} catch (\Throwable $e) {
+			$this->logger->warning('files_publish: reading metadata failed: ' . $e->getMessage());
+			return [];
 		}
 	}
 

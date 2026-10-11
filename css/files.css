@@ -35,3 +35,16 @@
 /* "Already deposited …" note above the form (recorded on the item's schema tag) */
 .fp-prior { margin: 0 0 10px; padding: 8px 10px; border-radius: 6px; background: var(--color-background-hover, #f4f4f4); color: var(--color-text-maxcontrast, #555); font-size: 13px; }
 .fp-prior a { text-decoration: underline; }
+/* Assign DOI dialog */
+.fp-doi-status p { margin: 0 0 6px; }
+.fp-doi-status p:last-child { margin-bottom: 0; }
+.fp-doi-state { display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 10px; font-size: 12px; font-weight: 600; color: #fff; vertical-align: 1px; }
+.fp-doi-draft { background: #8a6d00; }
+.fp-doi-findable { background: #2d7d46; }
+.fp-doi .fp-missing { border-color: var(--color-error-text, #8A0000); }
+.fp-doi-warn { margin: 8px 0; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--color-error-text, #8A0000); }
+.fp-doi-warn p { margin: 0 0 6px; }
+.fp-doi-warn-actions { display: flex; justify-content: flex-end; gap: 10px; }
+.fp-doi .fp-dialog-foot button.fp-findable,
+.fp-doi .fp-doi-warn-actions button { width: auto; }
+.fp-doi .fp-doi-warn-actions button.fp-doi-confirm { background: #c9302c; color: #fff; border-color: #c9302c; }
